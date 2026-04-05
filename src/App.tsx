@@ -1,26 +1,37 @@
 import { useState, useEffect, useRef } from "react";
+import { createClient } from "@supabase/supabase-js";
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
+//  SUPABASE CLIENT
+// ââââââââââââââââââââââââââââââââââââââââââââââ
+
+const SUPABASE_URL = "https://zgbsevjitszqqwazwubd.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpnYnNldmppdHN6cXF3YXp3dWJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0MTg0MDAsImV4cCI6MjA5MDk5NDQwMH0.rmPSR3gjpD22hjEZv5ffVbSDxT1CgaVQfkgb61tGhyw";
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  CONSTANTS
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 const PINK = "#FF2D92";
 const FUCHSIA = "#C2006A";
 
 const CATEGORIES = [
-  { id: "pantry",    label: "Pantry",        emoji: "🥫", color: "#FF9F43" },
-  { id: "fridge",    label: "Fridge",         emoji: "🥦", color: "#26de81" },
-  { id: "freezer",   label: "Freezer",        emoji: "🧊", color: "#4ECDC4" },
-  { id: "cleaning",  label: "Cleaning",       emoji: "🧹", color: "#A29BFE" },
-  { id: "personal",  label: "Personal Care",  emoji: "🧴", color: "#FD79A8" },
-  { id: "medicine",  label: "Medicine",       emoji: "💊", color: "#6C5CE7" },
-  { id: "laundry",   label: "Laundry",        emoji: "🫧", color: "#74B9FF" },
-  { id: "paper",     label: "Paper Goods",    emoji: "🧻", color: "#FFEAA7" },
-  { id: "pet",       label: "Pet",            emoji: "🐾", color: "#FAB1A0" },
-  { id: "beverages", label: "Beverages",      emoji: "🥤", color: "#55EFC4" },
-  { id: "snacks",    label: "Snacks",         emoji: "🍿", color: "#FDCB6E" },
-  { id: "baby",      label: "Baby & Kids",    emoji: "🍼", color: "#FFD3E8" },
-  { id: "other",     label: "Other",          emoji: "📦", color: "#DFE6E9" },
+  { id: "pantry",    label: "Pantry",        emoji: "ð¥«", color: "#FF9F43" },
+  { id: "fridge",    label: "Fridge",         emoji: "ð¥¦", color: "#26de81" },
+  { id: "freezer",   label: "Freezer",        emoji: "ð§", color: "#4ECDC4" },
+  { id: "cleaning",  label: "Cleaning",       emoji: "ð§¹", color: "#A29BFE" },
+  { id: "personal",  label: "Personal Care",  emoji: "ð§´", color: "#FD79A8" },
+  { id: "medicine",  label: "Medicine",       emoji: "ð", color: "#6C5CE7" },
+  { id: "laundry",   label: "Laundry",        emoji: "ð«§", color: "#74B9FF" },
+  { id: "paper",     label: "Paper Goods",    emoji: "ð§»", color: "#FFEAA7" },
+  { id: "pet",       label: "Pet",            emoji: "ð¾", color: "#FAB1A0" },
+  { id: "beverages", label: "Beverages",      emoji: "ð¥¤", color: "#55EFC4" },
+  { id: "snacks",    label: "Snacks",         emoji: "ð¿", color: "#FDCB6E" },
+  { id: "baby",      label: "Baby & Kids",    emoji: "ð¼", color: "#FFD3E8" },
+  { id: "other",     label: "Other",          emoji: "ð¦", color: "#DFE6E9" },
 ];
 
 const LOCATIONS = [
@@ -38,46 +49,51 @@ const DEFAULT_STORES = [
   "Whole Foods", "Trader Joe's", "CVS", "Walgreens",
 ];
 
-// ══════════════════════════════════════════════
-//  STORAGE HELPERS
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
+//  DATA HELPERS â Supabase
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
-const genId = () =>
-  Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+// Convert Supabase row â app item object
+const rowToItem = (row) => ({
+  id: row.id,
+  name: row.name,
+  category: row.category,
+  quantity: row.quantity,
+  lowStock: row.min_quantity,
+  unit: row.unit,
+  stores: (() => { try { return JSON.parse(row.stores_json || "[]"); } catch { return []; } })(),
+  upc: row.upc || "",
+  notes: row.notes || "",
+  photo: row.photo || null,
+  imageUrl: row.image_url || null,
+  brand: row.brand || "",
+  location: row.location || "",
+  expirationDate: row.expiration_date || "",
+  createdAt: row.created_at,
+});
 
-const db = {
-  getUsers: () => JSON.parse(localStorage.getItem("niles_users") || "[]"),
-  saveUsers: (u) => localStorage.setItem("niles_users", JSON.stringify(u)),
-  getCurrentUser: () => JSON.parse(localStorage.getItem("niles_cu") || "null"),
-  saveCurrentUser: (u) => localStorage.setItem("niles_cu", JSON.stringify(u)),
-  getItems: (uid) =>
-    (JSON.parse(localStorage.getItem("niles_items") || "{}"))[uid] || [],
-  saveItems: (uid, items) => {
-    const all = JSON.parse(localStorage.getItem("niles_items") || "{}");
-    all[uid] = items;
-    localStorage.setItem("niles_items", JSON.stringify(all));
-  },
-  getStores: (uid) => {
-    const all = JSON.parse(localStorage.getItem("niles_stores") || "{}");
-    return all[uid] || [...DEFAULT_STORES];
-  },
-  saveStores: (uid, stores) => {
-    const all = JSON.parse(localStorage.getItem("niles_stores") || "{}");
-    all[uid] = stores;
-    localStorage.setItem("niles_stores", JSON.stringify(all));
-  },
-  getCustomCats: (uid) =>
-    (JSON.parse(localStorage.getItem("niles_ccats") || "{}"))[uid] || [],
-  saveCustomCats: (uid, cats) => {
-    const all = JSON.parse(localStorage.getItem("niles_ccats") || "{}");
-    all[uid] = cats;
-    localStorage.setItem("niles_ccats", JSON.stringify(all));
-  },
-};
+// Convert app item object â Supabase row (for insert/update)
+const itemToRow = (item, userId) => ({
+  ...(item.id && !item.id.includes("-") ? {} : {}), // UUID stays as-is
+  user_id: userId,
+  name: item.name,
+  category: item.category || "other",
+  quantity: item.quantity ?? 1,
+  min_quantity: item.lowStock ?? 1,
+  unit: item.unit || "count",
+  stores_json: JSON.stringify(item.stores || []),
+  upc: item.upc || null,
+  notes: item.notes || null,
+  photo: item.photo || null,
+  image_url: item.imageUrl || null,
+  brand: item.brand || null,
+  location: item.location || null,
+  expiration_date: item.expirationDate || null,
+});
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  PRODUCT LOOKUP (Open Food Facts)
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 const lookupUpc = async (upc) => {
   try {
@@ -118,9 +134,9 @@ const lookupUpc = async (upc) => {
   return null;
 };
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  SHARED UI PRIMITIVES
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 const iStyle = {
   width: "100%",
@@ -163,70 +179,54 @@ const btnSecondary = {
   fontFamily: "inherit",
 };
 
-function Badge({ label, color, onRemove }) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 4,
-        background: color + "22",
-        color: color,
-        border: `1px solid ${color}44`,
-        borderRadius: 20,
-        padding: "3px 10px",
-        fontSize: 12,
-        fontWeight: 600,
-        margin: "2px 3px 2px 0",
-      }}
-    >
-      {label}
-      {onRemove && (
-        <span
-          onClick={onRemove}
-          style={{ cursor: "pointer", fontSize: 11, marginLeft: 2, opacity: 0.7 }}
-        >
-          ✕
-        </span>
-      )}
-    </span>
-  );
-}
-
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  AUTH SCREEN
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
-function AuthScreen({ onAuth }) {
+function AuthScreen() {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [err, setErr] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const submit = () => {
+  const submit = async () => {
     setErr("");
+    setSuccessMsg("");
     if (!email || !password) { setErr("Please fill in all fields."); return; }
-    const users = db.getUsers();
+    setLoading(true);
 
     if (mode === "login") {
-      const u = users.find(
-        (x) => x.email === email.toLowerCase() && x.password === password
-      );
-      if (!u) { setErr("Invalid email or password."); return; }
-      db.saveCurrentUser(u);
-      onAuth(u);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) { setErr(error.message); setLoading(false); }
+      // On success, onAuthStateChange in root handles navigation
     } else {
-      if (!name) { setErr("Please enter your name."); return; }
-      if (users.find((x) => x.email === email.toLowerCase())) {
-        setErr("Email already in use."); return;
+      if (!name) { setErr("Please enter your name."); setLoading(false); return; }
+      if (password.length < 6) { setErr("Password must be at least 6 characters."); setLoading(false); return; }
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: name } },
+      });
+      if (error) {
+        setErr(error.message);
+      } else {
+        setSuccessMsg("Account created! Check your email to confirm, then sign in.");
+        setMode("login");
       }
-      if (password.length < 6) { setErr("Password must be at least 6 characters."); return; }
-      const u = { id: genId(), email: email.toLowerCase(), password, name };
-      db.saveUsers([...users, u]);
-      db.saveCurrentUser(u);
-      onAuth(u);
+      setLoading(false);
     }
+  };
+
+  const signInWithGoogle = async () => {
+    setErr("");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) setErr(error.message);
   };
 
   return (
@@ -254,7 +254,7 @@ function AuthScreen({ onAuth }) {
             fontSize: 38,
           }}
         >
-          🎩
+          ð©
         </div>
         <h1 style={{ color: "white", fontSize: 38, fontWeight: 800, margin: 0, letterSpacing: "-1px", fontFamily: "'Syne', sans-serif" }}>
           Niles
@@ -279,7 +279,7 @@ function AuthScreen({ onAuth }) {
           {["login", "signup"].map((m) => (
             <button
               key={m}
-              onClick={() => { setMode(m); setErr(""); }}
+              onClick={() => { setMode(m); setErr(""); setSuccessMsg(""); }}
               style={{
                 flex: 1, padding: "10px", border: "none", borderRadius: 10,
                 background: mode === m ? "white" : "transparent",
@@ -295,6 +295,12 @@ function AuthScreen({ onAuth }) {
             </button>
           ))}
         </div>
+
+        {successMsg && (
+          <p style={{ color: "#00b894", fontSize: 13, margin: "-6px 0 14px", textAlign: "center", background: "#00b89411", borderRadius: 8, padding: "10px 12px" }}>
+            {successMsg}
+          </p>
+        )}
 
         {mode === "signup" && (
           <input
@@ -324,38 +330,58 @@ function AuthScreen({ onAuth }) {
           <p style={{ color: "#FF006E", fontSize: 13, margin: "-6px 0 14px", textAlign: "center" }}>{err}</p>
         )}
 
-        <button onClick={submit} style={btnPrimary}>
-          {mode === "login" ? "Sign In" : "Create Account"}
+        <button onClick={submit} style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }} disabled={loading}>
+          {loading ? "Please waitâ¦" : mode === "login" ? "Sign In" : "Create Account"}
+        </button>
+
+        {/* Divider */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "16px 0" }}>
+          <div style={{ flex: 1, height: 1, background: "#F0F0F0" }} />
+          <span style={{ fontSize: 12, color: "#bbb", fontWeight: 500 }}>or</span>
+          <div style={{ flex: 1, height: 1, background: "#F0F0F0" }} />
+        </div>
+
+        {/* Google OAuth */}
+        <button
+          onClick={signInWithGoogle}
+          style={{
+            ...btnSecondary,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+            color: "#444", borderColor: "#E8E8E8",
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+          </svg>
+          Continue with Google
         </button>
       </div>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  SCANNER MODAL
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function ScannerModal({ onDetect, onClose }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const animRef = useRef(null);
   const detectorRef = useRef(null);
-  const [status, setStatus] = useState("init"); // init | scanning | error | manual
+  const [status, setStatus] = useState("init");
   const [manualUpc, setManualUpc] = useState("");
   const [errMsg, setErrMsg] = useState("");
 
   const hasDetector = typeof BarcodeDetector !== "undefined";
 
   useEffect(() => {
-    if (hasDetector) {
-      startCamera();
-    } else {
-      setStatus("manual");
-    }
-    return () => {
-      stopCamera();
-    };
+    if (hasDetector) { startCamera(); }
+    else { setStatus("manual"); }
+    return () => { stopCamera(); };
   }, []);
 
   const stopCamera = () => {
@@ -378,7 +404,7 @@ function ScannerModal({ onDetect, onClose }) {
       });
       setStatus("scanning");
       scan();
-    } catch (e) {
+    } catch {
       setErrMsg("Camera not available. Enter UPC manually.");
       setStatus("manual");
     }
@@ -388,155 +414,101 @@ function ScannerModal({ onDetect, onClose }) {
     if (!videoRef.current || !detectorRef.current) return;
     try {
       const codes = await detectorRef.current.detect(videoRef.current);
-      if (codes.length > 0) {
-        stopCamera();
-        onDetect(codes[0].rawValue);
-        return;
-      }
+      if (codes.length > 0) { stopCamera(); onDetect(codes[0].rawValue); return; }
     } catch {}
     animRef.current = requestAnimationFrame(scan);
   };
 
   const submitManual = () => {
-    if (manualUpc.trim().length < 8) {
-      setErrMsg("Please enter a valid UPC (8–14 digits).");
-      return;
-    }
+    if (manualUpc.trim().length < 8) { setErrMsg("Please enter a valid UPC (8â14 digits)."); return; }
     onDetect(manualUpc.trim());
   };
 
   return (
     <div style={overlayStyle}>
       <div style={{ ...modalStyle, padding: 0, overflow: "hidden" }}>
-        {/* Header */}
         <div style={{ padding: "20px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Scan Barcode</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>✕</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>â</button>
         </div>
 
         {status === "scanning" && (
           <>
             <div style={{ position: "relative", background: "#000" }}>
-              <video
-                ref={videoRef}
-                style={{ width: "100%", display: "block", maxHeight: 260, objectFit: "cover" }}
-                playsInline
-                muted
-              />
-              {/* Scan guide */}
-              <div style={{
-                position: "absolute", inset: 0,
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <div style={{
-                  width: "72%", height: 100,
-                  border: `3px solid ${PINK}`,
-                  borderRadius: 12,
-                  boxShadow: "0 0 0 2000px rgba(0,0,0,0.45)",
-                  position: "relative",
-                }}>
-                  <div style={{
-                    position: "absolute", left: "50%", transform: "translateX(-50%)",
-                    top: "50%", marginTop: -1,
-                    width: "90%", height: 2,
-                    background: PINK, opacity: 0.8,
-                    animation: "scan-line 1.8s ease-in-out infinite",
-                  }} />
+              <video ref={videoRef} style={{ width: "100%", display: "block", maxHeight: 260, objectFit: "cover" }} playsInline muted />
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ width: "72%", height: 100, border: `3px solid ${PINK}`, borderRadius: 12, boxShadow: "0 0 0 2000px rgba(0,0,0,0.45)", position: "relative" }}>
+                  <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", top: "50%", marginTop: -1, width: "90%", height: 2, background: PINK, opacity: 0.8 }} />
                 </div>
               </div>
             </div>
-            <p style={{ textAlign: "center", color: "#888", fontSize: 13, padding: "12px 20px 0" }}>
-              Hold barcode steady within the frame
-            </p>
+            <p style={{ textAlign: "center", color: "#888", fontSize: 13, padding: "12px 20px 0" }}>Hold barcode steady within the frame</p>
+            <div style={{ padding: "12px 20px 20px" }}>
+              <button onClick={() => { stopCamera(); setStatus("manual"); }} style={btnSecondary}>Enter UPC manually</button>
+            </div>
           </>
         )}
 
-        <div style={{ padding: "16px 20px 24px" }}>
-          {status !== "scanning" && (
-            <>
-              {errMsg && (
-                <p style={{ color: "#888", fontSize: 13, textAlign: "center", marginTop: 0, marginBottom: 16 }}>{errMsg}</p>
-              )}
-              {!hasDetector && (
-                <p style={{ color: "#888", fontSize: 13, textAlign: "center", marginTop: 0, marginBottom: 16 }}>
-                  Live scanning requires Chrome on Android. Enter UPC below.
-                </p>
-              )}
-            </>
-          )}
-
-          <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 8px" }}>
-            Or enter UPC manually
-          </p>
-          <input
-            placeholder="e.g. 0123456789012"
-            value={manualUpc}
-            onChange={(e) => setManualUpc(e.target.value.replace(/\D/g, ""))}
-            onKeyDown={(e) => e.key === "Enter" && submitManual()}
-            style={{ ...iStyle, marginBottom: 14 }}
-            inputMode="numeric"
-          />
-          {errMsg && status === "manual" && (
-            <p style={{ color: "#FF006E", fontSize: 12, margin: "-8px 0 10px" }}>{errMsg}</p>
-          )}
-          <button onClick={submitManual} style={btnPrimary}>
-            Look Up Product
-          </button>
-        </div>
+        {(status === "manual" || status === "init") && (
+          <div style={{ padding: "0 20px 24px" }}>
+            {errMsg && <p style={{ color: "#888", fontSize: 13, marginBottom: 12 }}>{errMsg}</p>}
+            <input
+              placeholder="Enter UPC / barcode number"
+              value={manualUpc}
+              onChange={(e) => setManualUpc(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && submitManual()}
+              style={{ ...iStyle }}
+              autoFocus
+            />
+            <button onClick={submitManual} style={btnPrimary}>Look Up Product</button>
+          </div>
+        )}
       </div>
-      <style>{`
-        @keyframes scan-line {
-          0%, 100% { transform: translateX(-50%) translateY(-40px); }
-          50% { transform: translateX(-50%) translateY(40px); }
-        }
-      `}</style>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
-//  ADD / EDIT ITEM MODAL
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
+//  ITEM MODAL
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
   const isEdit = !!item;
-
+  const [tab, setTab] = useState("main");
   const [form, setForm] = useState(
     item || {
-      id: genId(),
-      name: "", brand: "", upc: "",
-      category: "pantry",
-      quantity: 1, unit: "count",
-      stores: [],
-      expirationDate: "",
-      location: "",
-      photo: null, imageUrl: null,
-      notes: "",
-      lowStock: 1,
+      name: "", category: "other", quantity: 1, lowStock: 1,
+      unit: "count", stores: [], upc: "", notes: "", photo: null,
+      imageUrl: null, brand: "", location: "", expirationDate: "",
     }
   );
   const [showScanner, setShowScanner] = useState(false);
-  const [lookingUp, setLookingUp] = useState(false);
-  const [tab, setTab] = useState("basics"); // basics | details
+  const [scanLoading, setScanLoading] = useState(false);
+  const photoRef = useRef(null);
 
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
 
-  const handleUpcDetected = async (upc) => {
+  const toggleStore = (s) => {
+    const arr = form.stores.includes(s) ? form.stores.filter((x) => x !== s) : [...form.stores, s];
+    set("stores", arr);
+  };
+
+  const handleScan = async (upc) => {
     setShowScanner(false);
+    setScanLoading(true);
     set("upc", upc);
-    setLookingUp(true);
-    const result = await lookupUpc(upc);
-    if (result) {
+    const info = await lookupUpc(upc);
+    if (info) {
       setForm((f) => ({
         ...f,
         upc,
-        name: result.name || f.name,
-        brand: result.brand || f.brand,
-        category: result.category || f.category,
-        imageUrl: result.imageUrl || f.imageUrl,
+        name: info.name || f.name,
+        brand: info.brand || f.brand,
+        category: info.category || f.category,
+        imageUrl: info.imageUrl || f.imageUrl,
       }));
     }
-    setLookingUp(false);
+    setScanLoading(false);
   };
 
   const handlePhoto = (e) => {
@@ -547,155 +519,93 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
     reader.readAsDataURL(file);
   };
 
-  const toggleStore = (s) => {
-    set("stores", form.stores.includes(s)
-      ? form.stores.filter((x) => x !== s)
-      : [...form.stores, s]
-    );
-  };
-
   const save = () => {
     if (!form.name.trim()) return;
-    onSave({ ...form, updatedAt: Date.now() });
+    onSave(form);
     onClose();
   };
 
-  const cat = allCategories.find((c) => c.id === form.category);
-
   return (
     <>
-      {showScanner && (
-        <ScannerModal onDetect={handleUpcDetected} onClose={() => setShowScanner(false)} />
-      )}
-      <div style={overlayStyle}>
-        <div style={{ ...modalStyle, display: "flex", flexDirection: "column", maxHeight: "90vh" }}>
+      {showScanner && <ScannerModal onDetect={handleScan} onClose={() => setShowScanner(false)} />}
+      <div style={overlayStyle} onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div style={modalStyle}>
           {/* Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 700 }}>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, fontFamily: "'Syne', sans-serif" }}>
               {isEdit ? "Edit Item" : "Add Item"}
             </h3>
-            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>✕</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>â</button>
           </div>
-
-          {/* UPC row */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-            <input
-              placeholder="UPC code"
-              value={form.upc}
-              onChange={(e) => set("upc", e.target.value)}
-              style={{ ...iStyle, marginBottom: 0, flex: 1 }}
-            />
-            <button
-              onClick={() => setShowScanner(true)}
-              style={{
-                padding: "0 16px",
-                background: PINK + "15",
-                border: `2px solid ${PINK}33`,
-                borderRadius: 12,
-                color: PINK,
-                fontSize: 20,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-            >
-              📷
-            </button>
-          </div>
-
-          {lookingUp && (
-            <p style={{ color: PINK, fontSize: 13, margin: "-4px 0 12px", textAlign: "center" }}>
-              🔍 Looking up product…
-            </p>
-          )}
 
           {/* Tabs */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
-            {["basics", "details"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                style={{
-                  flex: 1, padding: "9px", border: "none", borderRadius: 10,
-                  background: tab === t ? PINK : "#F5F5F5",
-                  color: tab === t ? "white" : "#888",
-                  fontWeight: 600, fontSize: 13, cursor: "pointer",
-                  fontFamily: "inherit", transition: "all 0.15s",
-                }}
-              >
-                {t === "basics" ? "Basics" : "Details"}
+          <div style={{ display: "flex", gap: 0, marginBottom: 20, background: "#F6F6F6", borderRadius: 12, padding: 4 }}>
+            {["main", "details"].map((t) => (
+              <button key={t} onClick={() => setTab(t)} style={{
+                flex: 1, padding: "9px", border: "none", borderRadius: 10,
+                background: tab === t ? "white" : "transparent",
+                color: tab === t ? PINK : "#999",
+                fontWeight: tab === t ? 700 : 500,
+                fontSize: 13, cursor: "pointer",
+                boxShadow: tab === t ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+                fontFamily: "inherit",
+              }}>
+                {t === "main" ? "Main Info" : "Details"}
               </button>
             ))}
           </div>
 
-          {/* Scrollable body */}
-          <div style={{ flex: 1, overflowY: "auto", paddingBottom: 4 }}>
-            {tab === "basics" && (
+          <div style={{ flex: 1 }}>
+            {tab === "main" && (
               <>
-                {/* Photo / image preview */}
-                <div style={{ display: "flex", gap: 12, marginBottom: 14, alignItems: "center" }}>
+                {/* Scan button */}
+                <button
+                  onClick={() => setShowScanner(true)}
+                  style={{
+                    ...btnSecondary, marginBottom: 14, display: "flex",
+                    alignItems: "center", justifyContent: "center", gap: 8,
+                  }}
+                >
+                  ð· {scanLoading ? "Looking up productâ¦" : "Scan Barcode"}
+                </button>
+
+                {/* Photo */}
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   <div
+                    onClick={() => photoRef.current?.click()}
                     style={{
-                      width: 72, height: 72,
-                      borderRadius: 14,
-                      background: (cat?.color || "#eee") + "33",
+                      width: 68, height: 68, borderRadius: 14,
+                      background: form.photo || form.imageUrl ? "transparent" : "#F5F5F5",
+                      border: "2px dashed #E0E0E0",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 32, flexShrink: 0,
-                      overflow: "hidden",
-                      border: "2px dashed " + (cat?.color || "#ccc") + "66",
+                      cursor: "pointer", overflow: "hidden", flexShrink: 0,
                     }}
                   >
                     {form.photo
-                      ? <img src={form.photo} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                      ? <img src={form.photo} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
                       : form.imageUrl
-                      ? <img src={form.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                      : cat?.emoji || "📦"}
+                      ? <img src={form.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
+                      : <span style={{ fontSize: 24 }}>ð·</span>
+                    }
                   </div>
+                  <input ref={photoRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
                   <div style={{ flex: 1 }}>
-                    <label style={{
-                      display: "block", padding: "9px 14px",
-                      background: "#F5F5F5", borderRadius: 10,
-                      fontSize: 13, fontWeight: 600, color: "#666",
-                      cursor: "pointer", textAlign: "center",
-                    }}>
-                      📷 Add Photo
-                      <input type="file" accept="image/*" onChange={handlePhoto} style={{ display: "none" }} />
-                    </label>
-                    {(form.photo || form.imageUrl) && (
-                      <button
-                        onClick={() => setForm((f) => ({ ...f, photo: null, imageUrl: null }))}
-                        style={{
-                          display: "block", width: "100%", marginTop: 6,
-                          padding: "7px", background: "none",
-                          border: "none", fontSize: 12, color: "#bbb", cursor: "pointer",
-                          fontFamily: "inherit",
-                        }}
-                      >
-                        Remove photo
-                      </button>
-                    )}
+                    <input placeholder="Brand (optional)" value={form.brand} onChange={(e) => set("brand", e.target.value)} style={{ ...iStyle, marginBottom: 8, fontSize: 13 }} />
+                    <input placeholder="Item name *" value={form.name} onChange={(e) => set("name", e.target.value)} style={{ ...iStyle, marginBottom: 0, fontWeight: 600 }} />
                   </div>
                 </div>
 
-                <input placeholder="Item name *" value={form.name} onChange={(e) => set("name", e.target.value)} style={iStyle} />
-                <input placeholder="Brand (optional)" value={form.brand} onChange={(e) => set("brand", e.target.value)} style={iStyle} />
-
                 {/* Category */}
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 8px" }}>Category</p>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+                <div style={{ overflowX: "auto", display: "flex", gap: 6, marginBottom: 16, paddingBottom: 4 }}>
                   {allCategories.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => set("category", c.id)}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 20,
-                        border: `2px solid ${form.category === c.id ? c.color : "#eee"}`,
-                        background: form.category === c.id ? c.color + "22" : "white",
-                        color: form.category === c.id ? c.color : "#888",
-                        fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                    >
+                    <button key={c.id} onClick={() => set("category", c.id)} style={{
+                      padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap",
+                      border: `2px solid ${form.category === c.id ? c.color : "#eee"}`,
+                      background: form.category === c.id ? c.color + "22" : "white",
+                      color: form.category === c.id ? c.color : "#888",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                    }}>
                       {c.emoji} {c.label}
                     </button>
                   ))}
@@ -706,43 +616,14 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Quantity</p>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button
-                        onClick={() => set("quantity", Math.max(0, form.quantity - 1))}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          background: "#F5F5F5", border: "none",
-                          fontSize: 18, cursor: "pointer", fontFamily: "inherit",
-                        }}
-                      >−</button>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.quantity}
-                        onChange={(e) => set("quantity", parseFloat(e.target.value) || 0)}
-                        style={{
-                          width: 60, textAlign: "center",
-                          padding: "8px", border: "2px solid #F0F0F0",
-                          borderRadius: 10, fontSize: 16, fontWeight: 700,
-                          outline: "none", fontFamily: "inherit",
-                        }}
-                      />
-                      <button
-                        onClick={() => set("quantity", form.quantity + 1)}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          background: PINK + "15", border: `2px solid ${PINK}33`,
-                          color: PINK, fontSize: 18, cursor: "pointer", fontFamily: "inherit",
-                        }}
-                      >+</button>
+                      <button onClick={() => set("quantity", Math.max(0, form.quantity - 1))} style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", border: "none", fontSize: 18, cursor: "pointer", fontFamily: "inherit" }}>â</button>
+                      <input type="number" min="0" value={form.quantity} onChange={(e) => set("quantity", parseFloat(e.target.value) || 0)} style={{ width: 60, textAlign: "center", padding: "8px", border: "2px solid #F0F0F0", borderRadius: 10, fontSize: 16, fontWeight: 700, outline: "none", fontFamily: "inherit" }} />
+                      <button onClick={() => set("quantity", form.quantity + 1)} style={{ width: 36, height: 36, borderRadius: 10, background: PINK + "15", border: `2px solid ${PINK}33`, color: PINK, fontSize: 18, cursor: "pointer", fontFamily: "inherit" }}>+</button>
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Unit</p>
-                    <select
-                      value={form.unit}
-                      onChange={(e) => set("unit", e.target.value)}
-                      style={{ ...iStyle, marginBottom: 0, height: 38, padding: "0 10px" }}
-                    >
+                    <select value={form.unit} onChange={(e) => set("unit", e.target.value)} style={{ ...iStyle, marginBottom: 0, height: 38, padding: "0 10px" }}>
                       {UNITS.map((u) => <option key={u}>{u}</option>)}
                     </select>
                   </div>
@@ -752,21 +633,13 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 8px" }}>Where to buy</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
                   {stores.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => toggleStore(s)}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 20,
-                        border: `2px solid ${form.stores.includes(s) ? PINK : "#eee"}`,
-                        background: form.stores.includes(s) ? PINK + "15" : "white",
-                        color: form.stores.includes(s) ? PINK : "#888",
-                        fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      {s}
-                    </button>
+                    <button key={s} onClick={() => toggleStore(s)} style={{
+                      padding: "6px 12px", borderRadius: 20,
+                      border: `2px solid ${form.stores.includes(s) ? PINK : "#eee"}`,
+                      background: form.stores.includes(s) ? PINK + "15" : "white",
+                      color: form.stores.includes(s) ? PINK : "#888",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                    }}>{s}</button>
                   ))}
                 </div>
               </>
@@ -774,79 +647,40 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
 
             {tab === "details" && (
               <>
-                {/* Location */}
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 8px" }}>Location in home</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                   {LOCATIONS.map((l) => (
-                    <button
-                      key={l}
-                      onClick={() => set("location", form.location === l ? "" : l)}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 20,
-                        border: `2px solid ${form.location === l ? "#6C5CE7" : "#eee"}`,
-                        background: form.location === l ? "#6C5CE722" : "white",
-                        color: form.location === l ? "#6C5CE7" : "#888",
-                        fontSize: 12, fontWeight: 600, cursor: "pointer",
-                        fontFamily: "inherit",
-                      }}
-                    >
-                      {l}
-                    </button>
+                    <button key={l} onClick={() => set("location", form.location === l ? "" : l)} style={{
+                      padding: "6px 12px", borderRadius: 20,
+                      border: `2px solid ${form.location === l ? "#6C5CE7" : "#eee"}`,
+                      background: form.location === l ? "#6C5CE722" : "white",
+                      color: form.location === l ? "#6C5CE7" : "#888",
+                      fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
+                    }}>{l}</button>
                   ))}
                 </div>
 
-                {/* Expiration */}
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Expiration date</p>
-                <input
-                  type="date"
-                  value={form.expirationDate}
-                  onChange={(e) => set("expirationDate", e.target.value)}
-                  style={{ ...iStyle }}
-                />
+                <input type="date" value={form.expirationDate} onChange={(e) => set("expirationDate", e.target.value)} style={{ ...iStyle }} />
 
-                {/* Low stock threshold */}
-                <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>
-                  Low stock alert at
-                </p>
+                <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Low stock alert at</p>
                 <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.lowStock}
-                    onChange={(e) => set("lowStock", parseInt(e.target.value) || 0)}
-                    style={{ ...iStyle, marginBottom: 0, width: 80 }}
-                  />
+                  <input type="number" min="0" value={form.lowStock} onChange={(e) => set("lowStock", parseInt(e.target.value) || 0)} style={{ ...iStyle, marginBottom: 0, width: 80 }} />
                   <span style={{ fontSize: 13, color: "#888" }}>{form.unit} or less</span>
                 </div>
 
-                {/* Notes */}
                 <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Notes</p>
-                <textarea
-                  placeholder="Any notes about this item..."
-                  value={form.notes}
-                  onChange={(e) => set("notes", e.target.value)}
-                  rows={3}
-                  style={{
-                    ...iStyle,
-                    resize: "vertical",
-                    fontFamily: "inherit",
-                  }}
-                />
+                <textarea placeholder="Any notes about this item..." value={form.notes} onChange={(e) => set("notes", e.target.value)} rows={3} style={{ ...iStyle, resize: "vertical", fontFamily: "inherit" }} />
               </>
             )}
           </div>
 
-          {/* Footer */}
           <div style={{ paddingTop: 16, display: "flex", gap: 8, flexDirection: "column" }}>
             <button onClick={save} style={{ ...btnPrimary, opacity: form.name ? 1 : 0.5 }} disabled={!form.name}>
               {isEdit ? "Save Changes" : "Add to Backstock"}
             </button>
             {isEdit && (
-              <button
-                onClick={() => { onDelete(form.id); onClose(); }}
-                style={{ ...btnSecondary, color: "#FF006E", borderColor: "#FF006E" }}
-              >
+              <button onClick={() => { onDelete(form.id); onClose(); }} style={{ ...btnSecondary, color: "#FF006E", borderColor: "#FF006E" }}>
                 Delete Item
               </button>
             )}
@@ -857,9 +691,9 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  ITEM CARD
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function ItemCard({ item, allCategories, onClick }) {
   const cat = allCategories.find((c) => c.id === item.category) || allCategories[0];
@@ -874,118 +708,43 @@ function ItemCard({ item, allCategories, onClick }) {
     <div
       onClick={onClick}
       style={{
-        background: "white",
-        borderRadius: 18,
-        overflow: "hidden",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.07)",
-        cursor: "pointer",
-        transition: "transform 0.15s, box-shadow 0.15s",
-        position: "relative",
+        background: "white", borderRadius: 18, overflow: "hidden",
+        boxShadow: "0 2px 12px rgba(0,0,0,0.07)", cursor: "pointer",
+        transition: "transform 0.15s, box-shadow 0.15s", position: "relative",
         border: isExpired ? "2px solid #FF006E33" : isLow ? `2px solid ${PINK}33` : "2px solid transparent",
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "";
-        e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)";
-      }}
+      onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
     >
-      {/* Image / Icon area */}
-      <div
-        style={{
-          height: 130,
-          background: `linear-gradient(150deg, ${cat.color}44, ${cat.color}1A)`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 52, position: "relative", overflow: "hidden",
-        }}
-      >
+      <div style={{ height: 130, background: `linear-gradient(150deg, ${cat.color}44, ${cat.color}1A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, position: "relative", overflow: "hidden" }}>
         {item.photo
           ? <img src={item.photo} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", position: "absolute", inset: 0, padding: "10px", boxSizing: "border-box" }} alt="" />
           : item.imageUrl
           ? <img src={item.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", position: "absolute", inset: 0, padding: "10px", boxSizing: "border-box" }} alt="" />
           : <span style={{ filter: "drop-shadow(0 2px 8px rgba(0,0,0,0.12))" }}>{cat.emoji}</span>}
-
-        {/* Category pill */}
-        <span
-          style={{
-            position: "absolute", top: 6, left: 6,
-            background: cat.color,
-            color: "white",
-            borderRadius: 20, padding: "2px 8px",
-            fontSize: 10, fontWeight: 700,
-            letterSpacing: "0.3px",
-          }}
-        >
-          {cat.emoji}
-        </span>
-
-        {/* Alert badges */}
-        {isExpired && (
-          <span style={{
-            position: "absolute", top: 6, right: 6,
-            background: "#FF006E", color: "white",
-            borderRadius: 20, padding: "2px 7px",
-            fontSize: 9, fontWeight: 700,
-          }}>EXPIRED</span>
-        )}
-        {!isExpired && isExpiringSoon && (
-          <span style={{
-            position: "absolute", top: 6, right: 6,
-            background: "#FFBE0B", color: "#333",
-            borderRadius: 20, padding: "2px 7px",
-            fontSize: 9, fontWeight: 700,
-          }}>EXP SOON</span>
-        )}
-        {isLow && !isExpired && !isExpiringSoon && (
-          <span style={{
-            position: "absolute", top: 6, right: 6,
-            background: PINK, color: "white",
-            borderRadius: 20, padding: "2px 7px",
-            fontSize: 9, fontWeight: 700,
-          }}>LOW</span>
-        )}
+        <span style={{ position: "absolute", top: 6, left: 6, background: cat.color, color: "white", borderRadius: 20, padding: "2px 8px", fontSize: 10, fontWeight: 700 }}>{cat.emoji}</span>
+        {isExpired && <span style={{ position: "absolute", top: 6, right: 6, background: "#FF006E", color: "white", borderRadius: 20, padding: "2px 7px", fontSize: 9, fontWeight: 700 }}>EXPIRED</span>}
+        {!isExpired && isExpiringSoon && <span style={{ position: "absolute", top: 6, right: 6, background: "#FFBE0B", color: "#333", borderRadius: 20, padding: "2px 7px", fontSize: 9, fontWeight: 700 }}>EXP SOON</span>}
+        {isLow && !isExpired && !isExpiringSoon && <span style={{ position: "absolute", top: 6, right: 6, background: PINK, color: "white", borderRadius: 20, padding: "2px 7px", fontSize: 9, fontWeight: 700 }}>LOW</span>}
       </div>
-
-      {/* Info area */}
       <div style={{ padding: "10px 11px 12px" }}>
-        {item.brand && (
-          <p style={{ margin: "0 0 1px", fontSize: 10, color: "#aaa", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>
-            {item.brand}
-          </p>
-        )}
-        <p style={{
-          margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#1A1A2E",
-          lineHeight: 1.25,
-          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
-        }}>
-          {item.name}
-        </p>
+        {item.brand && <p style={{ margin: "0 0 1px", fontSize: 10, color: "#aaa", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>{item.brand}</p>}
+        <p style={{ margin: "0 0 6px", fontSize: 13, fontWeight: 700, color: "#1A1A2E", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{item.name}</p>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{
-            fontSize: 16, fontWeight: 800,
-            color: isLow ? PINK : "#1A1A2E",
-          }}>
-            {item.quantity}
-          </span>
-          <span style={{ fontSize: 11, color: "#bbb", fontWeight: 500 }}>
-            {item.unit}
-          </span>
+          <span style={{ fontSize: 16, fontWeight: 800, color: isLow ? PINK : "#1A1A2E" }}>{item.quantity}</span>
+          <span style={{ fontSize: 11, color: "#bbb", fontWeight: 500 }}>{item.unit}</span>
         </div>
-        {item.location && (
-          <p style={{ margin: "4px 0 0", fontSize: 10, color: "#bbb" }}>📍 {item.location}</p>
-        )}
+        {item.location && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#bbb" }}>ð {item.location}</p>}
       </div>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  SHOPPING LIST VIEW
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
-function ShoppingListView({ items, stores, allCategories, onBack }) {
+function ShoppingListView({ items, stores, allCategories }) {
   const [selectedStore, setSelectedStore] = useState("");
   const [showLowOnly, setShowLowOnly] = useState(false);
 
@@ -997,106 +756,51 @@ function ShoppingListView({ items, stores, allCategories, onBack }) {
     return atStore && lowCheck;
   });
 
-  const groupedByCategory = allCategories
-    .map((c) => ({ cat: c, items: filtered.filter((i) => i.category === c.id) }))
-    .filter((g) => g.items.length > 0);
+  const grouped = allCategories
+    .map((c) => ({ ...c, items: filtered.filter((i) => i.category === c.id) }))
+    .filter((c) => c.items.length > 0);
 
   return (
     <div style={{ padding: "0 16px" }}>
       {/* Store filter */}
-      <div style={{ overflowX: "auto", display: "flex", gap: 8, paddingBottom: 4, marginBottom: 16 }}>
-        <button
-          onClick={() => setSelectedStore("")}
-          style={{
-            padding: "8px 16px", borderRadius: 20, whiteSpace: "nowrap",
-            border: `2px solid ${!selectedStore ? PINK : "#eee"}`,
-            background: !selectedStore ? PINK + "18" : "white",
-            color: !selectedStore ? PINK : "#888",
-            fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
+      <div style={{ overflowX: "auto", display: "flex", gap: 6, paddingBottom: 12 }}>
+        <button onClick={() => setSelectedStore("")} style={{ padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${!selectedStore ? PINK : "#e8e8e8"}`, background: !selectedStore ? PINK + "18" : "white", color: !selectedStore ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
           All Stores
         </button>
         {storesWithItems.map((s) => (
-          <button
-            key={s}
-            onClick={() => setSelectedStore(s)}
-            style={{
-              padding: "8px 16px", borderRadius: 20, whiteSpace: "nowrap",
-              border: `2px solid ${selectedStore === s ? PINK : "#eee"}`,
-              background: selectedStore === s ? PINK + "18" : "white",
-              color: selectedStore === s ? PINK : "#888",
-              fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-            }}
-          >
+          <button key={s} onClick={() => setSelectedStore(selectedStore === s ? "" : s)} style={{ padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${selectedStore === s ? PINK : "#e8e8e8"}`, background: selectedStore === s ? PINK + "18" : "white", color: selectedStore === s ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
             {s}
           </button>
         ))}
       </div>
 
       {/* Low stock toggle */}
-      <button
-        onClick={() => setShowLowOnly(!showLowOnly)}
-        style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "10px 16px", borderRadius: 12, marginBottom: 20,
-          border: `2px solid ${showLowOnly ? PINK : "#eee"}`,
-          background: showLowOnly ? PINK + "12" : "white",
-          color: showLowOnly ? PINK : "#888",
-          fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-        }}
-      >
-        <span>{showLowOnly ? "✓" : "○"}</span>
-        Low stock only
+      <button onClick={() => setShowLowOnly(!showLowOnly)} style={{ marginBottom: 16, padding: "7px 16px", borderRadius: 20, border: `2px solid ${showLowOnly ? PINK : "#e8e8e8"}`, background: showLowOnly ? PINK + "18" : "white", color: showLowOnly ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+        â ï¸ Low stock only
       </button>
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "40px 20px", color: "#ccc" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🛒</div>
-          <p style={{ fontSize: 15, fontWeight: 600 }}>No items found</p>
-          <p style={{ fontSize: 13, color: "#ddd" }}>
-            {selectedStore ? `No items tagged to ${selectedStore}` : "Add items and tag them to stores"}
-          </p>
+        <div style={{ textAlign: "center", padding: "40px 20px" }}>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>ð</div>
+          <p style={{ fontSize: 15, fontWeight: 700, color: "#888", margin: "0 0 6px" }}>Nothing here</p>
+          <p style={{ fontSize: 13, color: "#bbb", margin: 0 }}>Add items or adjust your filters</p>
         </div>
       ) : (
-        groupedByCategory.map(({ cat, items: catItems }) => (
-          <div key={cat.id} style={{ marginBottom: 24 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-              <span style={{ fontSize: 18 }}>{cat.emoji}</span>
-              <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#333" }}>{cat.label}</h4>
-              <span style={{
-                background: cat.color + "33", color: cat.color,
-                borderRadius: 20, padding: "1px 8px",
-                fontSize: 11, fontWeight: 700,
-              }}>
-                {catItems.length}
-              </span>
-            </div>
-            {catItems.map((item) => {
+        grouped.map((grp) => (
+          <div key={grp.id} style={{ marginBottom: 20 }}>
+            <p style={{ margin: "0 0 8px", fontSize: 12, fontWeight: 700, color: grp.color, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              {grp.emoji} {grp.label}
+            </p>
+            {grp.items.map((item) => {
               const isLow = item.quantity <= item.lowStock;
               return (
-                <div key={item.id} style={{
-                  background: "white",
-                  borderRadius: 14,
-                  padding: "12px 14px",
-                  marginBottom: 8,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  boxShadow: "0 1px 8px rgba(0,0,0,0.05)",
-                  border: isLow ? `1px solid ${PINK}33` : "1px solid transparent",
-                }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 10,
-                    background: cat.color + "22",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 22, flexShrink: 0, overflow: "hidden",
-                  }}>
+                <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "white", borderRadius: 14, padding: "12px 14px", marginBottom: 8, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: grp.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, overflow: "hidden" }}>
                     {item.photo
-                      ? <img src={item.photo} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                      ? <img src={item.photo} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
                       : item.imageUrl
-                      ? <img src={item.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
-                      : cat.emoji}
+                      ? <img src={item.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
+                      : grp.emoji}
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#1A1A2E" }}>{item.name}</p>
@@ -1104,15 +808,9 @@ function ShoppingListView({ items, stores, allCategories, onBack }) {
                   </div>
                   <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <p style={{ margin: 0, fontSize: 10, color: "#bbb", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.4px" }}>on hand</p>
-                    <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 800, color: isLow ? PINK : "#1A1A2E", lineHeight: 1 }}>
-                      {item.quantity}
-                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 18, fontWeight: 800, color: isLow ? PINK : "#1A1A2E", lineHeight: 1 }}>{item.quantity}</p>
                     <p style={{ margin: "1px 0 0", fontSize: 10, color: "#bbb" }}>{item.unit}</p>
-                    {isLow && (
-                      <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: PINK, textTransform: "uppercase", letterSpacing: "0.3px" }}>
-                        restock
-                      </p>
-                    )}
+                    {isLow && <p style={{ margin: "3px 0 0", fontSize: 9, fontWeight: 700, color: PINK, textTransform: "uppercase", letterSpacing: "0.3px" }}>restock</p>}
                   </div>
                 </div>
               );
@@ -1124,15 +822,14 @@ function ShoppingListView({ items, stores, allCategories, onBack }) {
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  BACKSTOCK SCREEN
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function BackstockScreen({ user }) {
-  const [items, setItems] = useState(() => db.getItems(user.id));
-  const [stores, setStores] = useState(() => db.getStores(user.id));
-  const [customCats, setCustomCats] = useState(() => db.getCustomCats(user.id));
-  const [view, setView] = useState("shelf"); // shelf | shopping
+  const [items, setItems] = useState([]);
+  const [stores, setStores] = useState([...DEFAULT_STORES]);
+  const [view, setView] = useState("shelf");
   const [showAdd, setShowAdd] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [filterCat, setFilterCat] = useState("");
@@ -1140,27 +837,62 @@ function BackstockScreen({ user }) {
   const [search, setSearch] = useState("");
   const [newStore, setNewStore] = useState("");
   const [showStoreInput, setShowStoreInput] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const allCategories = [...CATEGORIES, ...customCats];
+  const allCategories = CATEGORIES;
 
-  const saveItems = (updated) => { setItems(updated); db.saveItems(user.id, updated); };
+  // Load items from Supabase
+  useEffect(() => {
+    loadItems();
+    loadStores();
+  }, [user.id]);
 
-  const handleSave = (item) => {
-    const existing = items.find((i) => i.id === item.id);
-    saveItems(existing
-      ? items.map((i) => (i.id === item.id ? item : i))
-      : [...items, { ...item, createdAt: Date.now() }]
-    );
+  const loadItems = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("items")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    if (!error && data) setItems(data.map(rowToItem));
+    setLoading(false);
   };
 
-  const handleDelete = (id) => saveItems(items.filter((i) => i.id !== id));
-
-  const addStore = () => {
-    if (newStore.trim() && !stores.includes(newStore.trim())) {
-      const updated = [...stores, newStore.trim()];
-      setStores(updated);
-      db.saveStores(user.id, updated);
+  const loadStores = async () => {
+    const { data, error } = await supabase
+      .from("user_stores")
+      .select("name")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: true });
+    if (!error && data && data.length > 0) {
+      setStores(data.map((r) => r.name));
     }
+    // Otherwise keep DEFAULT_STORES
+  };
+
+  const handleSave = async (item) => {
+    const isNew = !items.find((i) => i.id === item.id);
+    if (isNew) {
+      const row = itemToRow(item, user.id);
+      const { data, error } = await supabase.from("items").insert(row).select().single();
+      if (!error && data) setItems((prev) => [rowToItem(data), ...prev]);
+    } else {
+      const row = itemToRow(item, user.id);
+      const { data, error } = await supabase.from("items").update(row).eq("id", item.id).select().single();
+      if (!error && data) setItems((prev) => prev.map((i) => (i.id === item.id ? rowToItem(data) : i)));
+    }
+  };
+
+  const handleDelete = async (id) => {
+    await supabase.from("items").delete().eq("id", id);
+    setItems((prev) => prev.filter((i) => i.id !== id));
+  };
+
+  const addStore = async () => {
+    const name = newStore.trim();
+    if (!name || stores.includes(name)) { setNewStore(""); setShowStoreInput(false); return; }
+    const { error } = await supabase.from("user_stores").insert({ user_id: user.id, name, emoji: "ðª", color: "#888888" });
+    if (!error) setStores((prev) => [...prev, name]);
     setNewStore("");
     setShowStoreInput(false);
   };
@@ -1168,72 +900,32 @@ function BackstockScreen({ user }) {
   const filtered = items.filter((i) => {
     const matchCat = filterCat ? i.category === filterCat : true;
     const matchStore = filterStore ? i.stores.includes(filterStore) : true;
-    const matchSearch = search
-      ? i.name.toLowerCase().includes(search.toLowerCase()) ||
-        (i.brand || "").toLowerCase().includes(search.toLowerCase())
-      : true;
+    const matchSearch = search ? i.name.toLowerCase().includes(search.toLowerCase()) || (i.brand || "").toLowerCase().includes(search.toLowerCase()) : true;
     return matchCat && matchStore && matchSearch;
   });
 
   const lowStockCount = items.filter((i) => i.quantity <= i.lowStock).length;
-  const expiredCount = items.filter(
-    (i) => i.expirationDate && new Date(i.expirationDate) < new Date()
-  ).length;
+  const expiredCount = items.filter((i) => i.expirationDate && new Date(i.expirationDate) < new Date()).length;
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
       {/* Header */}
-      <div style={{
-        background: "white",
-        padding: "20px 16px 0",
-        boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
-        position: "sticky", top: 0, zIndex: 10,
-      }}>
+      <div style={{ background: "white", padding: "20px 16px 0", boxShadow: "0 2px 12px rgba(0,0,0,0.05)", position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
           <div>
             <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#1A1A2E", fontFamily: "'Syne', sans-serif" }}>Backstock</h2>
             <p style={{ margin: "2px 0 0", fontSize: 13, color: "#aaa" }}>
               {items.length} item{items.length !== 1 ? "s" : ""}
-              {lowStockCount > 0 && <span style={{ color: PINK }}> · {lowStockCount} low</span>}
-              {expiredCount > 0 && <span style={{ color: "#FF006E" }}> · {expiredCount} expired</span>}
+              {lowStockCount > 0 && <span style={{ color: PINK }}> Â· {lowStockCount} low</span>}
+              {expiredCount > 0 && <span style={{ color: "#FF006E" }}> Â· {expiredCount} expired</span>}
             </p>
           </div>
-          <button
-            onClick={() => setShowAdd(true)}
-            style={{
-              width: 44, height: 44,
-              background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`,
-              border: "none", borderRadius: 14,
-              color: "white", fontSize: 22,
-              cursor: "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 16px rgba(255,45,146,0.35)",
-            }}
-          >
-            +
-          </button>
+          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
         </div>
 
-        {/* View toggle */}
         <div style={{ display: "flex", gap: 0, marginBottom: 0 }}>
-          {[
-            { id: "shelf", label: "My Shelf" },
-            { id: "shopping", label: "🛒 Shopping List" },
-          ].map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setView(v.id)}
-              style={{
-                flex: 1, padding: "11px 8px",
-                border: "none", borderBottom: `3px solid ${view === v.id ? PINK : "transparent"}`,
-                background: "transparent",
-                color: view === v.id ? PINK : "#999",
-                fontWeight: view === v.id ? 700 : 500,
-                fontSize: 14, cursor: "pointer",
-                fontFamily: "inherit",
-                transition: "all 0.15s",
-              }}
-            >
+          {[{ id: "shelf", label: "My Shelf" }, { id: "shopping", label: "ð Shopping List" }].map((v) => (
+            <button key={v.id} onClick={() => setView(v.id)} style={{ flex: 1, padding: "11px 8px", border: "none", borderBottom: `3px solid ${view === v.id ? PINK : "transparent"}`, background: "transparent", color: view === v.id ? PINK : "#999", fontWeight: view === v.id ? 700 : 500, fontSize: 14, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
               {v.label}
             </button>
           ))}
@@ -1242,163 +934,69 @@ function BackstockScreen({ user }) {
 
       {view === "shopping" ? (
         <div style={{ paddingTop: 20 }}>
-          <ShoppingListView
-            items={items}
-            stores={stores}
-            allCategories={allCategories}
-          />
+          <ShoppingListView items={items} stores={stores} allCategories={allCategories} />
         </div>
       ) : (
         <>
-          {/* Search + filters */}
           <div style={{ padding: "14px 16px 0" }}>
-            <input
-              placeholder="🔍  Search items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ ...iStyle, marginBottom: 10, background: "white" }}
-            />
+            <input placeholder="ð  Search items..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...iStyle, marginBottom: 10, background: "white" }} />
 
-            {/* Category filter pills */}
             <div style={{ overflowX: "auto", display: "flex", gap: 6, paddingBottom: 8 }}>
-              <button
-                onClick={() => setFilterCat("")}
-                style={{
-                  padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap",
-                  border: `2px solid ${!filterCat ? PINK : "#e8e8e8"}`,
-                  background: !filterCat ? PINK + "18" : "white",
-                  color: !filterCat ? PINK : "#888",
-                  fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                }}
-              >
-                All
-              </button>
-              {allCategories
-                .filter((c) => items.some((i) => i.category === c.id))
-                .map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => setFilterCat(filterCat === c.id ? "" : c.id)}
-                    style={{
-                      padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap",
-                      border: `2px solid ${filterCat === c.id ? c.color : "#e8e8e8"}`,
-                      background: filterCat === c.id ? c.color + "22" : "white",
-                      color: filterCat === c.id ? c.color : "#888",
-                      fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                    }}
-                  >
-                    {c.emoji} {c.label}
-                  </button>
-                ))}
+              <button onClick={() => setFilterCat("")} style={{ padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${!filterCat ? PINK : "#e8e8e8"}`, background: !filterCat ? PINK + "18" : "white", color: !filterCat ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>All</button>
+              {allCategories.filter((c) => items.some((i) => i.category === c.id)).map((c) => (
+                <button key={c.id} onClick={() => setFilterCat(filterCat === c.id ? "" : c.id)} style={{ padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${filterCat === c.id ? c.color : "#e8e8e8"}`, background: filterCat === c.id ? c.color + "22" : "white", color: filterCat === c.id ? c.color : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+                  {c.emoji} {c.label}
+                </button>
+              ))}
             </div>
 
-            {/* Store filter pills */}
             {stores.filter((s) => items.some((i) => i.stores.includes(s))).length > 0 && (
               <div style={{ overflowX: "auto", display: "flex", gap: 6, paddingBottom: 8 }}>
-                <button
-                  onClick={() => setFilterStore("")}
-                  style={{
-                    padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap",
-                    border: `2px solid ${!filterStore ? "#6C5CE7" : "#e8e8e8"}`,
-                    background: !filterStore ? "#6C5CE722" : "white",
-                    color: !filterStore ? "#6C5CE7" : "#888",
-                    fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >
-                  All Stores
-                </button>
-                {stores
-                  .filter((s) => items.some((i) => i.stores.includes(s)))
-                  .map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => setFilterStore(filterStore === s ? "" : s)}
-                      style={{
-                        padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap",
-                        border: `2px solid ${filterStore === s ? "#6C5CE7" : "#e8e8e8"}`,
-                        background: filterStore === s ? "#6C5CE722" : "white",
-                        color: filterStore === s ? "#6C5CE7" : "#888",
-                        fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                <button
-                  onClick={() => setShowStoreInput(!showStoreInput)}
-                  style={{
-                    padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap",
-                    border: "2px dashed #ddd",
-                    background: "white", color: "#bbb",
-                    fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
-                  }}
-                >
-                  + Add store
-                </button>
+                <button onClick={() => setFilterStore("")} style={{ padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${!filterStore ? "#6C5CE7" : "#e8e8e8"}`, background: !filterStore ? "#6C5CE722" : "white", color: !filterStore ? "#6C5CE7" : "#888", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>All Stores</button>
+                {stores.filter((s) => items.some((i) => i.stores.includes(s))).map((s) => (
+                  <button key={s} onClick={() => setFilterStore(filterStore === s ? "" : s)} style={{ padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${filterStore === s ? "#6C5CE7" : "#e8e8e8"}`, background: filterStore === s ? "#6C5CE722" : "white", color: filterStore === s ? "#6C5CE7" : "#888", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>{s}</button>
+                ))}
+                <button onClick={() => setShowStoreInput(!showStoreInput)} style={{ padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap", border: "2px dashed #ddd", background: "white", color: "#bbb", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add store</button>
+              </div>
+            )}
+
+            {stores.filter((s) => items.some((i) => i.stores.includes(s))).length === 0 && (
+              <div style={{ overflowX: "auto", display: "flex", gap: 6, paddingBottom: 8 }}>
+                <button onClick={() => setShowStoreInput(!showStoreInput)} style={{ padding: "5px 12px", borderRadius: 20, whiteSpace: "nowrap", border: "2px dashed #ddd", background: "white", color: "#bbb", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>+ Add store</button>
               </div>
             )}
 
             {showStoreInput && (
               <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                <input
-                  placeholder="Store name"
-                  value={newStore}
-                  onChange={(e) => setNewStore(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && addStore()}
-                  style={{ ...iStyle, marginBottom: 0, flex: 1 }}
-                  autoFocus
-                />
-                <button
-                  onClick={addStore}
-                  style={{
-                    padding: "0 16px", background: PINK, color: "white",
-                    border: "none", borderRadius: 12, cursor: "pointer",
-                    fontWeight: 700, fontFamily: "inherit",
-                  }}
-                >
-                  Add
-                </button>
+                <input placeholder="Store name" value={newStore} onChange={(e) => setNewStore(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addStore()} style={{ ...iStyle, marginBottom: 0, flex: 1 }} autoFocus />
+                <button onClick={addStore} style={{ padding: "0 16px", background: PINK, color: "white", border: "none", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontFamily: "inherit" }}>Add</button>
               </div>
             )}
           </div>
 
-          {/* Item grid */}
           <div style={{ padding: "12px 16px 0" }}>
-            {filtered.length === 0 ? (
+            {loading ? (
               <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: 52, marginBottom: 14 }}>🏠</div>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>â³</div>
+                <p style={{ color: "#aaa", fontSize: 14 }}>Loading your itemsâ¦</p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "60px 20px" }}>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>ð </div>
                 <p style={{ fontSize: 16, fontWeight: 700, color: "#888", margin: "0 0 8px" }}>
                   {items.length === 0 ? "Your shelf is empty" : "No items match"}
                 </p>
                 <p style={{ fontSize: 14, color: "#bbb", margin: 0 }}>
-                  {items.length === 0
-                    ? "Tap + to start building your backstock"
-                    : "Try clearing your filters"}
+                  {items.length === 0 ? "Tap + to start building your backstock" : "Try clearing your filters"}
                 </p>
                 {items.length === 0 && (
-                  <button
-                    onClick={() => setShowAdd(true)}
-                    style={{ ...btnPrimary, marginTop: 24, width: "auto", padding: "13px 32px" }}
-                  >
-                    Add First Item
-                  </button>
+                  <button onClick={() => setShowAdd(true)} style={{ ...btnPrimary, marginTop: 24, width: "auto", padding: "13px 32px" }}>Add First Item</button>
                 )}
               </div>
             ) : (
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(2, 1fr)",
-                  gap: 12,
-                }}
-              >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12 }}>
                 {filtered.map((item) => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    allCategories={allCategories}
-                    onClick={() => setEditItem(item)}
-                  />
+                  <ItemCard key={item.id} item={item} allCategories={allCategories} onClick={() => setEditItem(item)} />
                 ))}
               </div>
             )}
@@ -1406,199 +1004,56 @@ function BackstockScreen({ user }) {
         </>
       )}
 
-      {/* Add Item Modal */}
-      {showAdd && (
-        <ItemModal
-          allCategories={allCategories}
-          stores={stores}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onClose={() => setShowAdd(false)}
-        />
-      )}
-
-      {/* Edit Item Modal */}
-      {editItem && (
-        <ItemModal
-          item={editItem}
-          allCategories={allCategories}
-          stores={stores}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onClose={() => setEditItem(null)}
-        />
-      )}
+      {showAdd && <ItemModal allCategories={allCategories} stores={stores} onSave={handleSave} onDelete={handleDelete} onClose={() => setShowAdd(false)} />}
+      {editItem && <ItemModal item={editItem} allCategories={allCategories} stores={stores} onSave={handleSave} onDelete={handleDelete} onClose={() => setEditItem(null)} />}
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  HOME SCREEN
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function HomeScreen({ user, items, onNavigate }) {
   const lowStock = items.filter((i) => i.quantity <= i.lowStock);
-  const expiring = items.filter((i) => {
-    if (!i.expirationDate) return false;
-    const days = (new Date(i.expirationDate) - new Date()) / 86400000;
-    return days >= 0 && days <= 7;
-  });
-  const expired = items.filter(
-    (i) => i.expirationDate && new Date(i.expirationDate) < new Date()
-  );
+  const expiring = items.filter((i) => { if (!i.expirationDate) return false; const days = (new Date(i.expirationDate) - new Date()) / 86400000; return days >= 0 && days <= 7; });
+  const expired = items.filter((i) => i.expirationDate && new Date(i.expirationDate) < new Date());
+  const catCounts = CATEGORIES.map((c) => ({ ...c, count: items.filter((i) => i.category === c.id).length })).filter((c) => c.count > 0).sort((a, b) => b.count - a.count).slice(0, 4);
 
-  const allCategories = CATEGORIES;
-  const catCounts = allCategories
-    .map((c) => ({ ...c, count: items.filter((i) => i.category === c.id).length }))
-    .filter((c) => c.count > 0)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 4);
+  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "there";
 
   return (
-    <div
-      style={{
-        fontFamily: "'DM Sans', -apple-system, sans-serif",
-        background: "#F7F7F9",
-        minHeight: "100%",
-        paddingBottom: 80,
-      }}
-    >
-      {/* Hero */}
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`,
-          padding: "32px 20px 28px",
-          color: "white",
-        }}
-      >
-        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day,</p>
+    <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
+      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "32px 20px 28px", color: "white" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day+</p>
         <h2 style={{ margin: "0 0 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: "'Syne', sans-serif" }}>
-          {user.name} 👋
+          {displayName} ð
         </h2>
         <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Niles is at your service.</p>
       </div>
 
       <div style={{ padding: "20px 16px" }}>
-        {/* Stats row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
           {[
-            { label: "Total Items", value: items.length, color: "#6C5CE7", emoji: "📦" },
-            { label: "Low Stock", value: lowStock.length, color: PINK, emoji: "⚠️" },
-            { label: "Expiring", value: expiring.length + expired.length, color: "#FF9F43", emoji: "📅" },
+            { label: "Total Items", value: items.length, color: "#6C5CE7", emoji: "ð¦" },
+            { label: "Low Stock", value: lowStock.length, color: PINK, emoji: "â ï¸" },
+            { label: "Expiring", value: expiring.length + expired.length, color: "#FF9F43", emoji: "ð" },
           ].map((s) => (
-            <div
-              key={s.label}
-              onClick={() => onNavigate("backstock")}
-              style={{
-                background: "white",
-                borderRadius: 16,
-                padding: "14px 10px",
-                textAlign: "center",
-                boxShadow: "0 2px 10px rgba(0,0,0,0.06)",
-                cursor: "pointer",
-              }}
-            >
+            <div key={s.label} onClick={() => onNavigate("backstock")} style={{ background: "white", borderRadius: 16, padding: "14px 10px", textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.06)", cursor: "pointer" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>{s.emoji}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: s.value > 0 ? s.color : "#333" }}>
-                {s.value}
-              </div>
-              <div style={{ fontSize: 10, color: "#aaa", fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+              <p style={{ margin: 0, fontSize: 22, fontWeight: 800, color: s.color, fontFamily: "'Syne', sans-serif" }}>{s.value}</p>
+              <p style={{ margin: "3px 0 0", fontSize: 10, color: "#bbb", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>{s.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Alerts */}
-        {(lowStock.length > 0 || expired.length > 0) && (
-          <div style={{ marginBottom: 24 }}>
-            <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "#333" }}>
-              Needs Attention
-            </h3>
-            {expired.length > 0 && (
-              <div
-                onClick={() => onNavigate("backstock")}
-                style={{
-                  background: "#FF006E12",
-                  border: "1px solid #FF006E33",
-                  borderRadius: 14,
-                  padding: "12px 14px",
-                  marginBottom: 8,
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 22 }}>🗑️</span>
-                <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#FF006E" }}>
-                    {expired.length} expired item{expired.length !== 1 ? "s" : ""}
-                  </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "#888" }}>
-                    {expired.slice(0, 2).map((i) => i.name).join(", ")}
-                    {expired.length > 2 && ` +${expired.length - 2} more`}
-                  </p>
-                </div>
-              </div>
-            )}
-            {lowStock.length > 0 && (
-              <div
-                onClick={() => onNavigate("backstock")}
-                style={{
-                  background: PINK + "10",
-                  border: `1px solid ${PINK}33`,
-                  borderRadius: 14,
-                  padding: "12px 14px",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <span style={{ fontSize: 22 }}>📉</span>
-                <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: PINK }}>
-                    {lowStock.length} item{lowStock.length !== 1 ? "s" : ""} running low
-                  </p>
-                  <p style={{ margin: 0, fontSize: 12, color: "#888" }}>
-                    {lowStock.slice(0, 2).map((i) => i.name).join(", ")}
-                    {lowStock.length > 2 && ` +${lowStock.length - 2} more`}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Top categories */}
         {catCounts.length > 0 && (
-          <div style={{ marginBottom: 24 }}>
-            <h3 style={{ margin: "0 0 12px", fontSize: 15, fontWeight: 700, color: "#333" }}>
-              Your Shelf
-            </h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <div style={{ background: "white", borderRadius: 20, padding: "18px 16px", marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+            <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Top Categories</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {catCounts.map((c) => (
-                <div
-                  key={c.id}
-                  onClick={() => onNavigate("backstock")}
-                  style={{
-                    background: "white",
-                    borderRadius: 16,
-                    padding: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
-                    cursor: "pointer",
-                  }}
-                >
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10,
-                    background: c.color + "22",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 20,
-                  }}>
-                    {c.emoji}
-                  </div>
+                <div key={c.id} onClick={() => onNavigate("backstock")} style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: c.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>{c.emoji}</div>
                   <div>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>{c.label}</p>
                     <p style={{ margin: 0, fontSize: 11, color: "#aaa" }}>{c.count} items</p>
@@ -1609,98 +1064,41 @@ function HomeScreen({ user, items, onNavigate }) {
           </div>
         )}
 
-        {/* Quickstart if empty */}
         {items.length === 0 && (
-          <div style={{
-            background: "white", borderRadius: 20, padding: "24px",
-            textAlign: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
-          }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>🏠</div>
+          <div style={{ background: "white", borderRadius: 20, padding: "24px", textAlign: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>ð </div>
             <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700 }}>Start Your Backstock</h3>
-            <p style={{ margin: "0 0 20px", fontSize: 14, color: "#888", lineHeight: 1.5 }}>
-              Scan or manually add household items to keep track of what you have.
-            </p>
-            <button onClick={() => onNavigate("backstock")} style={{ ...btnPrimary, width: "auto", padding: "13px 32px" }}>
-              Add First Item
-            </button>
+            <p style={{ margin: "0 0 20px", fontSize: 14, color: "#888", lineHeight: 1.5 }}>Scan or manually add household items to keep track of what you have.</p>
+            <button onClick={() => onNavigate("backstock")} style={{ ...btnPrimary, width: "auto", padding: "13px 32px" }}>Add First Item</button>
           </div>
         )}
 
-        {/* Gift Giver placeholder teaser */}
-        <div
-          onClick={() => onNavigate("gifts")}
-          style={{
-            marginTop: 16,
-            background: "linear-gradient(135deg, #6C5CE7, #a29bfe)",
-            borderRadius: 20,
-            padding: "18px 20px",
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(108,92,231,0.3)",
-          }}
-        >
-          <div style={{ fontSize: 32 }}>🎁</div>
+        <div onClick={() => onNavigate("gifts")} style={{ marginTop: 16, background: "linear-gradient(135deg, #6C5CE7, #a29bfe)", borderRadius: 20, padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", boxShadow: "0 4px 20px rgba(108,92,231,0.3)" }}>
+          <div style={{ fontSize: 32 }}>ð</div>
           <div>
             <p style={{ margin: 0, color: "white", fontWeight: 700, fontSize: 15 }}>Gift Giver</p>
-            <p style={{ margin: "3px 0 0", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>Coming soon — never miss a birthday</p>
+            <p style={{ margin: "3px 0 0", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>Coming soon â never miss a birthday</p>
           </div>
-          <div style={{ marginLeft: "auto", color: "rgba(255,255,255,0.6)", fontSize: 18 }}>›</div>
+          <div style={{ marginLeft: "auto", color: "rgba(255,255,255,0.6)", fontSize: 18 }}>âº</div>
         </div>
       </div>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  GIFT GIVER PLACEHOLDER
-// ══════════════════════════════════════════════
+// âââââââââââââââââââââââââââââââââââââââââââââââ
 
 function GiftGiverScreen() {
   return (
-    <div style={{
-      fontFamily: "'DM Sans', -apple-system, sans-serif",
-      background: "#F7F7F9",
-      minHeight: "100%",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "40px 24px",
-      textAlign: "center",
-    }}>
-      <div style={{
-        width: 100, height: 100, borderRadius: "50%",
-        background: "linear-gradient(135deg, #6C5CE7, #a29bfe)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 44, marginBottom: 24,
-        boxShadow: "0 12px 40px rgba(108,92,231,0.3)",
-      }}>
-        🎁
-      </div>
-      <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: "#1A1A2E", fontFamily: "'Syne', sans-serif" }}>
-        Gift Giver
-      </h2>
-      <p style={{ margin: "0 0 32px", fontSize: 15, color: "#888", lineHeight: 1.6, maxWidth: 300 }}>
-        Never miss a birthday or special occasion. Smart gift suggestions, reminders, and more — coming next.
-      </p>
+    <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center" }}>
+      <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #6C5CE7, #a29bfe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, marginBottom: 24, boxShadow: "0 12px 40px rgba(108,92,231,0.3)" }}>ð</div>
+      <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: "#1A1A2E", fontFamily: "'Syne', sans-serif" }}>Gift Giver</h2>
+      <p style={{ margin: "0 0 32px", fontSize: 15, color: "#888", lineHeight: 1.6, maxWidth: 300 }}>Never miss a birthday or special occasion. Smart gift suggestions, reminders, and more â coming next.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 300 }}>
-        {[
-          { emoji: "📅", text: "Birthday & event reminders" },
-          { emoji: "🔔", text: "Batch digest notifications" },
-          { emoji: "🤖", text: "AI-powered gift suggestions" },
-          { emoji: "📸", text: "Share wish lists & screenshots" },
-        ].map((f) => (
-          <div key={f.text} style={{
-            background: "white",
-            borderRadius: 14,
-            padding: "12px 16px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          }}>
+        {[{ emoji: "ð", text: "Birthday & event reminders" }, { emoji: "ð", text: "Batch digest notifications" }, { emoji: "ð¤", text: "AI-powered gift suggestions" }, { emoji: "ð¸", text: "Share wish lists & screenshots" }].map((f) => (
+          <div key={f.text} style={{ background: "white", borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
             <span style={{ fontSize: 22 }}>{f.emoji}</span>
             <span style={{ fontSize: 14, color: "#555", fontWeight: 500 }}>{f.text}</span>
           </div>
@@ -1710,123 +1108,72 @@ function GiftGiverScreen() {
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  PROFILE SCREEN
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function ProfileScreen({ user, onLogout }) {
+  const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
+
   return (
-    <div style={{
-      fontFamily: "'DM Sans', -apple-system, sans-serif",
-      background: "#F7F7F9",
-      minHeight: "100%",
-      paddingBottom: 80,
-    }}>
+    <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
       <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "36px 20px 28px", textAlign: "center" }}>
-        <div style={{
-          width: 72, height: 72, borderRadius: "50%",
-          background: "white",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 30, margin: "0 auto 12px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-        }}>
-          {user.name.charAt(0).toUpperCase()}
+        <div style={{ width: 72, height: 72, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, margin: "0 auto 12px", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+          {displayName.charAt(0).toUpperCase()}
         </div>
-        <h2 style={{ color: "white", margin: "0 0 4px", fontSize: 20, fontWeight: 700 }}>{user.name}</h2>
+        <h2 style={{ color: "white", margin: "0 0 4px", fontSize: 20, fontWeight: 700 }}>{displayName}</h2>
         <p style={{ color: "rgba(255,255,255,0.8)", margin: 0, fontSize: 13 }}>{user.email}</p>
       </div>
-
       <div style={{ padding: "20px 16px" }}>
         <div style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
-          <button
-            onClick={onLogout}
-            style={{
-              width: "100%", padding: "16px 20px",
-              background: "none", border: "none",
-              display: "flex", alignItems: "center", gap: 12,
-              cursor: "pointer", fontFamily: "inherit",
-              borderTop: "1px solid #F5F5F5",
-            }}
-          >
-            <span style={{ fontSize: 20 }}>🚪</span>
+          <button onClick={onLogout} style={{ width: "100%", padding: "16px 20px", background: "none", border: "none", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", fontFamily: "inherit", borderTop: "1px solid #F5F5F5" }}>
+            <span style={{ fontSize: 20 }}>ðª</span>
             <span style={{ fontSize: 15, color: "#FF006E", fontWeight: 600 }}>Sign Out</span>
           </button>
         </div>
-
-        <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#ccc" }}>
-          Niles · Your personal home butler 🎩
-        </p>
+        <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#ccc" }}>Niles Â· Your personal home butler ð©</p>
       </div>
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  BOTTOM NAV
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function BottomNav({ screen, setScreen }) {
   const tabs = [
-    { id: "home",      label: "Home",     icon: "🏠" },
-    { id: "backstock", label: "Backstock", icon: "📦" },
-    { id: "gifts",     label: "Gifts",    icon: "🎁" },
-    { id: "profile",   label: "Profile",  icon: "👤" },
+    { id: "home", label: "Home", icon: "ð " },
+    { id: "backstock", label: "Backstock", icon: "ð¦" },
+    { id: "gifts", label: "Gifts", icon: "ð" },
+    { id: "profile", label: "Profile", icon: "ð¤" },
   ];
-
   return (
-    <div style={{
-      position: "fixed",
-      bottom: 0, left: "50%", transform: "translateX(-50%)",
-      width: "100%", maxWidth: 430,
-      background: "white",
-      borderTop: "1px solid #F0F0F0",
-      display: "flex",
-      paddingBottom: "env(safe-area-inset-bottom, 8px)",
-      boxShadow: "0 -4px 20px rgba(0,0,0,0.06)",
-      zIndex: 100,
-    }}>
+    <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "white", borderTop: "1px solid #F0F0F0", display: "flex", paddingBottom: "env(safe-area-inset-bottom, 8px)", boxShadow: "0 -4px 20px rgba(0,0,0,0.06)", zIndex: 100 }}>
       {tabs.map((t) => (
-        <button
-          key={t.id}
-          onClick={() => setScreen(t.id)}
-          style={{
-            flex: 1, padding: "10px 4px 8px",
-            border: "none", background: "none",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-            cursor: "pointer", fontFamily: "inherit",
-          }}
-        >
+        <button key={t.id} onClick={() => setScreen(t.id)} style={{ flex: 1, padding: "10px 4px 8px", border: "none", background: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, cursor: "pointer", fontFamily: "inherit" }}>
           <span style={{ fontSize: 22 }}>{t.icon}</span>
-          <span style={{
-            fontSize: 10, fontWeight: 600,
-            color: screen === t.id ? PINK : "#bbb",
-            transition: "color 0.15s",
-          }}>
-            {t.label}
-          </span>
-          {screen === t.id && (
-            <div style={{
-              position: "absolute",
-              bottom: "env(safe-area-inset-bottom, 8px)",
-              width: 4, height: 4,
-              borderRadius: "50%",
-              background: PINK,
-              marginTop: 2,
-            }} />
-          )}
+          <span style={{ fontSize: 10, fontWeight: 600, color: screen === t.id ? PINK : "#bbb", transition: "color 0.15s" }}>{t.label}</span>
         </button>
       ))}
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââ
 //  MAIN APP
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 function MainApp({ user, onLogout }) {
   const [screen, setScreen] = useState("home");
-  const items = db.getItems(user.id);
+  const [items, setItems] = useState([]);
+
+  // Load items once for HomeScreen stats
+  useEffect(() => {
+    supabase.from("items").select("*").eq("user_id", user.id).then(({ data }) => {
+      if (data) setItems(data.map(rowToItem));
+    });
+  }, [user.id]);
 
   const screens = {
     home: <HomeScreen user={user} items={items} onNavigate={setScreen} />,
@@ -1836,74 +1183,77 @@ function MainApp({ user, onLogout }) {
   };
 
   return (
-    <div style={{
-      maxWidth: 430,
-      margin: "0 auto",
-      minHeight: "100vh",
-      background: "#F7F7F9",
-      position: "relative",
-      fontFamily: "'DM Sans', -apple-system, sans-serif",
-      overflowX: "hidden",
-    }}>
-      <div style={{ minHeight: "calc(100vh - 64px)" }}>
-        {screens[screen]}
-      </div>
+    <div style={{ maxWidth: 430, margin: "0 auto", minHeight: "100vh", background: "#F7F7F9", position: "relative", fontFamily: "'DM Sans', -apple-system, sans-serif", overflowX: "hidden" }}>
+      <div style={{ minHeight: "calc(100vh - 64px)" }}>{screens[screen]}</div>
       <BottomNav screen={screen} setScreen={setScreen} />
     </div>
   );
 }
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  SHARED MODAL STYLES
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 
 const overlayStyle = {
-  position: "fixed",
-  inset: 0,
-  background: "rgba(0,0,0,0.5)",
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "center",
-  zIndex: 1000,
-  backdropFilter: "blur(2px)",
+  position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
+  display: "flex", alignItems: "flex-end", justifyContent: "center",
+  zIndex: 1000, backdropFilter: "blur(2px)",
 };
 
 const modalStyle = {
-  background: "white",
-  borderRadius: "28px 28px 0 0",
-  padding: "24px 20px 32px",
-  width: "100%",
-  maxWidth: 430,
-  maxHeight: "90vh",
-  overflowY: "auto",
+  background: "white", borderRadius: "28px 28px 0 0",
+  padding: "24px 20px 32px", width: "100%", maxWidth: 430,
+  maxHeight: "90vh", overflowY: "auto",
   boxShadow: "0 -8px 40px rgba(0,0,0,0.15)",
   fontFamily: "'DM Sans', -apple-system, sans-serif",
 };
 
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââ
 //  ROOT
-// ══════════════════════════════════════════════
+// ââââââââââââââââââââââââââââââââââââââââââââââââ
 
 export default function NilesApp() {
-  const [user, setUser] = useState(() => db.getCurrentUser());
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
+    // Load fonts
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = "https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap";
     document.head.appendChild(link);
-    link.onload = () => {
-      document.body.style.fontFamily = "'DM Sans', -apple-system, sans-serif";
-    };
+
+    // Check current session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleAuth = (u) => setUser(u);
-
-  const handleLogout = () => {
-    db.saveCurrentUser(null);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 
-  if (!user) return <AuthScreen onAuth={handleAuth} />;
+  if (authLoading) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(155deg, ${PINK} 0%, #FF87C3 45%, #FFF0F7 100%)` }}>
+        <div style={{ textAlign: "center", color: "white" }}>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>ð©</div>
+          <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.9 }}>Loading Nilesâ¦</p>
+     0  </div>
+      </div>
+    );
+  }
+
+  if (!user) return <AuthScreen />;
   return <MainApp user={user} onLogout={handleLogout} />;
 }
