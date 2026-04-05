@@ -2,9 +2,9 @@
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  SUPABASE CLIENT
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const SUPABASE_URL = "https://zgbsevjitszqqwazwubd.supabase.co";
 const SUPABASE_ANON_KEY =
@@ -12,27 +12,27 @@ const SUPABASE_ANON_KEY =
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  CONSTANTS
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const PINK = "#FF2D92";
 const FUCHSIA = "#C2006A";
 
 const CATEGORIES = [
-  { id: "pantry",    label: "Pantry",        emoji: "ð¥«", color: "#FF9F43" },
-  { id: "fridge",    label: "Fridge",         emoji: "ð¥¦", color: "#26de81" },
-  { id: "freezer",   label: "Freezer",        emoji: "ð§", color: "#4ECDC4" },
-  { id: "cleaning",  label: "Cleaning",       emoji: "ð§¹", color: "#A29BFE" },
-  { id: "personal",  label: "Personal Care",  emoji: "ð§´", color: "#FD79A8" },
-  { id: "medicine",  label: "Medicine",       emoji: "ð", color: "#6C5CE7" },
-  { id: "laundry",   label: "Laundry",        emoji: "ð«§", color: "#74B9FF" },
-  { id: "paper",     label: "Paper Goods",    emoji: "ð§»", color: "#FFEAA7" },
-  { id: "pet",       label: "Pet",            emoji: "ð¾", color: "#FAB1A0" },
-  { id: "beverages", label: "Beverages",      emoji: "ð¥¤", color: "#55EFC4" },
-  { id: "snacks",    label: "Snacks",         emoji: "ð¿", color: "#FDCB6E" },
-  { id: "baby",      label: "Baby & Kids",    emoji: "ð¼", color: "#FFD3E8" },
-  { id: "other",     label: "Other",          emoji: "ð¦", color: "#DFE6E9" },
+  { id: "pantry",    label: "Pantry",        emoji: "🥫", color: "#FF9F43" },
+  { id: "fridge",    label: "Fridge",         emoji: "🥦", color: "#26de81" },
+  { id: "freezer",   label: "Freezer",        emoji: "🧊", color: "#4ECDC4" },
+  { id: "cleaning",  label: "Cleaning",       emoji: "🧹", color: "#A29BFE" },
+  { id: "personal",  label: "Personal Care",  emoji: "🧴", color: "#FD79A8" },
+  { id: "medicine",  label: "Medicine",       emoji: "💊", color: "#6C5CE7" },
+  { id: "laundry",   label: "Laundry",        emoji: "🫧", color: "#74B9FF" },
+  { id: "paper",     label: "Paper Goods",    emoji: "🧻", color: "#FFEAA7" },
+  { id: "pet",       label: "Pet",            emoji: "🐾", color: "#FAB1A0" },
+  { id: "beverages", label: "Beverages",      emoji: "🥤", color: "#55EFC4" },
+  { id: "snacks",    label: "Snacks",         emoji: "🍿", color: "#FDCB6E" },
+  { id: "baby",      label: "Baby & Kids",    emoji: "🍼", color: "#FFD3E8" },
+  { id: "other",     label: "Other",          emoji: "📦", color: "#DFE6E9" },
 ];
 
 const LOCATIONS = [
@@ -50,11 +50,11 @@ const DEFAULT_STORES = [
   "Whole Foods", "Trader Joe's", "CVS", "Walgreens",
 ];
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
-//  DATA HELPERS â Supabase
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
+//  DATA HELPERS — Supabase
+// ══════════════════════════════════════════════
 
-// Convert Supabase row â app item object
+// Convert Supabase row → app item object
 const rowToItem = (row) => ({
   id: row.id,
   name: row.name,
@@ -73,7 +73,7 @@ const rowToItem = (row) => ({
   createdAt: row.created_at,
 });
 
-// Convert app item object â Supabase row (for insert/update)
+// Convert app item object → Supabase row (for insert/update)
 const itemToRow = (item, userId) => ({
   ...(item.id && !item.id.includes("-") ? {} : {}), // UUID stays as-is
   user_id: userId,
@@ -92,9 +92,9 @@ const itemToRow = (item, userId) => ({
   expiration_date: item.expirationDate || null,
 });
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  PRODUCT LOOKUP (Open Food Facts)
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const lookupUpc = async (upc) => {
   try {
@@ -135,9 +135,9 @@ const lookupUpc = async (upc) => {
   return null;
 };
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  SHARED UI PRIMITIVES
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const iStyle = {
   width: "100%",
@@ -180,9 +180,9 @@ const btnSecondary = {
   fontFamily: "inherit",
 };
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  AUTH SCREEN
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function AuthScreen() {
   const [mode, setMode] = useState("login");
@@ -255,7 +255,7 @@ function AuthScreen() {
             fontSize: 38,
           }}
         >
-          ð©
+          🎩
         </div>
         <h1 style={{ color: "white", fontSize: 38, fontWeight: 800, margin: 0, letterSpacing: "-1px", fontFamily: "'Syne', sans-serif" }}>
           Niles
@@ -287,7 +287,56 @@ function AuthScreen() {
                 color: mode === m ? PINK : "#999",
                 fontWeight: mode === m ? 700 : 500,
                 fontSize: 14, cursor: "pointer",
-                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
+              }}
+            >
+              {m === "login" ? "Log in" : "Sign up"}
+            </button>
+          ))}
+        </div>
+
+        {/* Messages */}
+        {err && <div style={{ color: "#E74C3C", fontSize: 13, marginBottom: 16, padding: "12px", background: "#FFE5E5", borderRadius: 8 }}>{err}</div>}
+        {successMsg && <div style={{ color: "#27AE60", fontSize: 13, marginBottom: 16, padding: "12px", background: "#E8F8F5", borderRadius: 8 }}>{successMsg}</div>}
+
+        {/* Form */}
+        {mode === "signup" && (
+          <input
+            type="text"
+            placeholder="Your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            style={iStyle}
+          />
+        )}
+        <input
+          type="email"
+          placeholder="Email address"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={iStyle}
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={iStyle}
+        />
+
+        {/* Primary Button */}
+        <button onClick={submit} disabled={loading} style={{ ...btnPrimary, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}>
+          {loading ? "Loading..." : (mode === "login" ? "Log in" : "Create account")}
+        </button>
+
+        {/* Google Button */}
+        <button onClick={signInWithGoogle} style={{ ...btnSecondary, marginTop: 12 }}>
+          Continue with Google
+        </button>
+      </div>
+    </div>
+  );
+}adow: mode === m ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
                 transition: "all 0.2s",
                 fontFamily: "inherit",
               }}
@@ -332,7 +381,7 @@ function AuthScreen() {
         )}
 
         <button onClick={submit} style={{ ...btnPrimary, opacity: loading ? 0.7 : 1 }} disabled={loading}>
-          {loading ? "Please waitâ¦" : mode === "login" ? "Sign In" : "Create Account"}
+          {loading ? "Please wait…" : mode === "login" ? "Sign In" : "Create Account"}
         </button>
 
         {/* Divider */}
@@ -364,9 +413,9 @@ function AuthScreen() {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  SCANNER MODAL
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function ScannerModal({ onDetect, onClose }) {
   const videoRef = useRef(null);
@@ -421,7 +470,7 @@ function ScannerModal({ onDetect, onClose }) {
   };
 
   const submitManual = () => {
-    if (manualUpc.trim().length < 8) { setErrMsg("Please enter a valid UPC (8â14 digits)."); return; }
+    if (manualUpc.trim().length < 8) { setErrMsg("Please enter a valid UPC (8–14 digits)."); return; }
     onDetect(manualUpc.trim());
   };
 
@@ -430,7 +479,7 @@ function ScannerModal({ onDetect, onClose }) {
       <div style={{ ...modalStyle, padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "20px 20px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Scan Barcode</h3>
-          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>â</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>✕</button>
         </div>
 
         {status === "scanning" && (
@@ -469,9 +518,9 @@ function ScannerModal({ onDetect, onClose }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  ITEM MODAL
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
   const isEdit = !!item;
@@ -536,7 +585,7 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
             <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, fontFamily: "'Syne', sans-serif" }}>
               {isEdit ? "Edit Item" : "Add Item"}
             </h3>
-            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>â</button>
+            <button onClick={onClose} style={{ background: "none", border: "none", fontSize: 22, cursor: "pointer", color: "#999" }}>✕</button>
           </div>
 
           {/* Tabs */}
@@ -567,7 +616,7 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
                     alignItems: "center", justifyContent: "center", gap: 8,
                   }}
                 >
-                  ð· {scanLoading ? "Looking up productâ¦" : "Scan Barcode"}
+                  📷 {scanLoading ? "Looking up product…" : "Scan Barcode"}
                 </button>
 
                 {/* Photo */}
@@ -586,7 +635,7 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
                       ? <img src={form.photo} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
                       : form.imageUrl
                       ? <img src={form.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="" />
-                      : <span style={{ fontSize: 24 }}>ð·</span>
+                      : <span style={{ fontSize: 24 }}>📷</span>
                     }
                   </div>
                   <input ref={photoRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
@@ -617,7 +666,7 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
                   <div style={{ flex: 1 }}>
                     <p style={{ fontSize: 13, fontWeight: 600, color: "#555", margin: "0 0 6px" }}>Quantity</p>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <button onClick={() => set("quantity", Math.max(0, form.quantity - 1))} style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", border: "none", fontSize: 18, cursor: "pointer", fontFamily: "inherit" }}>â</button>
+                      <button onClick={() => set("quantity", Math.max(0, form.quantity - 1))} style={{ width: 36, height: 36, borderRadius: 10, background: "#F5F5F5", border: "none", fontSize: 18, cursor: "pointer", fontFamily: "inherit" }}>−</button>
                       <input type="number" min="0" value={form.quantity} onChange={(e) => set("quantity", parseFloat(e.target.value) || 0)} style={{ width: 60, textAlign: "center", padding: "8px", border: "2px solid #F0F0F0", borderRadius: 10, fontSize: 16, fontWeight: 700, outline: "none", fontFamily: "inherit" }} />
                       <button onClick={() => set("quantity", form.quantity + 1)} style={{ width: 36, height: 36, borderRadius: 10, background: PINK + "15", border: `2px solid ${PINK}33`, color: PINK, fontSize: 18, cursor: "pointer", fontFamily: "inherit" }}>+</button>
                     </div>
@@ -692,9 +741,9 @@ function ItemModal({ item, allCategories, stores, onSave, onDelete, onClose }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  ITEM CARD
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function ItemCard({ item, allCategories, onClick }) {
   const cat = allCategories.find((c) => c.id === item.category) || allCategories[0];
@@ -717,6 +766,21 @@ function ItemCard({ item, allCategories, onClick }) {
       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
     >
+      <div style={{ display: "flex", gap: 12, padding: "12px" }}>
+        <div style={{ width: 56, height: 56, borderRadius: 12, background: cat.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{cat.emoji}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h4 style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 700, color: "#222", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</h4>
+          <p style={{ margin: "0 0 6px", fontSize: 13, color: "#888" }}>{item.quantity} {item.unit}</p>
+          {item.brand && <p style={{ margin: 0, fontSize: 12, color: "#aaa" }}>{item.brand}</p>}
+          {isExpired && <p style={{ margin: 0, fontSize: 12, color: "#FF006E", fontWeight: 600 }}>EXPIRED</p>}
+          {isExpiringSoon && !isExpired && <p style={{ margin: 0, fontSize: 12, color: "#FFA500", fontWeight: 600 }}>Exp. soon</p>}
+          {isLow && !isExpired && !isExpiringSoon && <p style={{ margin: 0, fontSize: 12, color: PINK, fontWeight: 600 }}>Low stock</p>}
+        </div>
+      </div>
+    </div>
+  );
+}currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
+    >
       <div style={{ height: 130, background: `linear-gradient(150deg, ${cat.color}44, ${cat.color}1A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, position: "relative", overflow: "hidden" }}>
         {item.photo
           ? <img src={item.photo} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", position: "absolute", inset: 0, padding: "10px", boxSizing: "border-box" }} alt="" />
@@ -735,15 +799,15 @@ function ItemCard({ item, allCategories, onClick }) {
           <span style={{ fontSize: 16, fontWeight: 800, color: isLow ? PINK : "#1A1A2E" }}>{item.quantity}</span>
           <span style={{ fontSize: 11, color: "#bbb", fontWeight: 500 }}>{item.unit}</span>
         </div>
-        {item.location && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#bbb" }}>ð {item.location}</p>}
+        {item.location && <p style={{ margin: "4px 0 0", fontSize: 10, color: "#bbb" }}>📍 {item.location}</p>}
       </div>
     </div>
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  SHOPPING LIST VIEW
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function ShoppingListView({ items, stores, allCategories }) {
   const [selectedStore, setSelectedStore] = useState("");
@@ -777,12 +841,12 @@ function ShoppingListView({ items, stores, allCategories }) {
 
       {/* Low stock toggle */}
       <button onClick={() => setShowLowOnly(!showLowOnly)} style={{ marginBottom: 16, padding: "7px 16px", borderRadius: 20, border: `2px solid ${showLowOnly ? PINK : "#e8e8e8"}`, background: showLowOnly ? PINK + "18" : "white", color: showLowOnly ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-        â ï¸ Low stock only
+        ⚠️ Low stock only
       </button>
 
       {filtered.length === 0 ? (
         <div style={{ textAlign: "center", padding: "40px 20px" }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>ð</div>
+          <div style={{ fontSize: 40, marginBottom: 10 }}>🛒</div>
           <p style={{ fontSize: 15, fontWeight: 700, color: "#888", margin: "0 0 6px" }}>Nothing here</p>
           <p style={{ fontSize: 13, color: "#bbb", margin: 0 }}>Add items or adjust your filters</p>
         </div>
@@ -823,9 +887,9 @@ function ShoppingListView({ items, stores, allCategories }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  BACKSTOCK SCREEN
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function BackstockScreen({ user }) {
   const [items, setItems] = useState([]);
@@ -892,7 +956,10 @@ function BackstockScreen({ user }) {
   const addStore = async () => {
     const name = newStore.trim();
     if (!name || stores.includes(name)) { setNewStore(""); setShowStoreInput(false); return; }
-    const { error } = await supabase.from("user_stores").insert({ user_id: user.id, name, emoji: "ðª", color: "#888888" });
+    const { error } = await supabase.from("user_stores").insert({ user_id: user.id, name }).select().single();
+    if (!error) { setStores((prev) => [...prev, name]); setNewStore(""); setShowStoreInput(false); }
+  };
+base.from("user_stores").insert({ user_id: user.id, name, emoji: "🏪", color: "#888888" });
     if (!error) setStores((prev) => [...prev, name]);
     setNewStore("");
     setShowStoreInput(false);
@@ -917,15 +984,15 @@ function BackstockScreen({ user }) {
             <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#1A1A2E", fontFamily: "'Syne', sans-serif" }}>Backstock</h2>
             <p style={{ margin: "2px 0 0", fontSize: 13, color: "#aaa" }}>
               {items.length} item{items.length !== 1 ? "s" : ""}
-              {lowStockCount > 0 && <span style={{ color: PINK }}> Â· {lowStockCount} low</span>}
-              {expiredCount > 0 && <span style={{ color: "#FF006E" }}> Â· {expiredCount} expired</span>}
+              {lowStockCount > 0 && <span style={{ color: PINK }}> · {lowStockCount} low</span>}
+              {expiredCount > 0 && <span style={{ color: "#FF006E" }}> · {expiredCount} expired</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
+          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
         </div>
 
         <div style={{ display: "flex", gap: 0, marginBottom: 0 }}>
-          {[{ id: "shelf", label: "My Shelf" }, { id: "shopping", label: "ð Shopping List" }].map((v) => (
+          {[{ id: "shelf", label: "My Shelf" }, { id: "shopping", label: "🛒 Shopping List" }].map((v) => (
             <button key={v.id} onClick={() => setView(v.id)} style={{ flex: 1, padding: "11px 8px", border: "none", borderBottom: `3px solid ${view === v.id ? PINK : "transparent"}`, background: "transparent", color: view === v.id ? PINK : "#999", fontWeight: view === v.id ? 700 : 500, fontSize: 14, cursor: "pointer", fontFamily: "inherit", transition: "all 0.15s" }}>
               {v.label}
             </button>
@@ -940,7 +1007,7 @@ function BackstockScreen({ user }) {
       ) : (
         <>
           <div style={{ padding: "14px 16px 0" }}>
-            <input placeholder="ð  Search items..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...iStyle, marginBottom: 10, background: "white" }} />
+            <input placeholder="🔍  Search items..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ ...iStyle, marginBottom: 10, background: "white" }} />
 
             <div style={{ overflowX: "auto", display: "flex", gap: 6, paddingBottom: 8 }}>
               <button onClick={() => setFilterCat("")} style={{ padding: "6px 14px", borderRadius: 20, whiteSpace: "nowrap", border: `2px solid ${!filterCat ? PINK : "#e8e8e8"}`, background: !filterCat ? PINK + "18" : "white", color: !filterCat ? PINK : "#888", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>All</button>
@@ -978,12 +1045,12 @@ function BackstockScreen({ user }) {
           <div style={{ padding: "12px 16px 0" }}>
             {loading ? (
               <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: 36, marginBottom: 12 }}>â³</div>
-                <p style={{ color: "#aaa", fontSize: 14 }}>Loading your itemsâ¦</p>
+                <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
+                <p style={{ color: "#aaa", fontSize: 14 }}>Loading your items…</p>
               </div>
             ) : filtered.length === 0 ? (
               <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: 52, marginBottom: 14 }}>ð </div>
+                <div style={{ fontSize: 52, marginBottom: 14 }}>🏠</div>
                 <p style={{ fontSize: 16, fontWeight: 700, color: "#888", margin: "0 0 8px" }}>
                   {items.length === 0 ? "Your shelf is empty" : "No items match"}
                 </p>
@@ -1011,9 +1078,9 @@ function BackstockScreen({ user }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  HOME SCREEN
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function HomeScreen({ user, items, onNavigate }) {
   const lowStock = items.filter((i) => i.quantity <= i.lowStock);
@@ -1026,19 +1093,77 @@ function HomeScreen({ user, items, onNavigate }) {
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
       <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "32px 20px 28px", color: "white" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day+</p>
+        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day</p>
         <h2 style={{ margin: "0 0 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: "'Syne', sans-serif" }}>
-          {displayName} ð
+          {displayName} 👋
         </h2>
-        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Niles is at your service.</p>
+        <p style={{ margin: 0, fontSize: 13, opacity: 0.88 }}>
+          {items.length === 0 ? "Start by adding items to your backstock" : `You have ${items.length} item${items.length === 1 ? "" : "s"}`}
+        </p>
+      </div>
+
+      <div style={{ padding: "18px 16px" }}>
+        {/* Quick stats */}
+        {(lowStock.length > 0 || expiring.length > 0 || expired.length > 0) && (
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.4px" }}>Alerts</p>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {expired.length > 0 && (
+                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: "#FF006E15", border: "2px solid #FF006E", borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 10, color: "#FF006E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>EXPIRED</p>
+                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#FF006E" }}>{expired.length}</p>
+                </button>
+              )}
+              {lowStock.length > 0 && (
+                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: PINK + "18", border: `2px solid ${PINK}`, borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 10, color: PINK, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>Low Stock</p>
+                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: PINK }}>{lowStock.length}</p>
+                </button>
+              )}
+              {expiring.length > 0 && (
+                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: "#FFBE0B15", border: "2px solid #FFBE0B", borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                  <p style={{ margin: "0 0 4px", fontSize: 10, color: "#FFBE0B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>Expiring Soon</p>
+                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#FFBE0B" }}>{expiring.length}</p>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Category breakdown */}
+        {catCounts.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.4px" }}>Categories</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
+              {catCounts.map((c) => (
+                <button key={c.id} onClick={() => onNavigate("backstock")} style={{ padding: "14px 12px", background: "white", border: `2px solid ${c.color}22`, borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
+                  <p style={{ margin: 0, fontSize: 22, marginBottom: 4 }}>{c.emoji}</p>
+                  <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: c.color, textTransform: "uppercase", letterSpacing: "0.3px" }}>{c.label}</p>
+                  <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#1A1A2E" }}>{c.count}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Navigation */}
+        {items.length > 0 && (
+          <div>
+            <button onClick={() => onNavigate("backstock")} style={{ ...btnPrimary, width: "100%" }}>View My Shelf</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}le={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Niles is at your service.</p>
       </div>
 
       <div style={{ padding: "20px 16px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 24 }}>
           {[
-            { label: "Total Items", value: items.length, color: "#6C5CE7", emoji: "ð¦" },
-            { label: "Low Stock", value: lowStock.length, color: PINK, emoji: "â ï¸" },
-            { label: "Expiring", value: expiring.length + expired.length, color: "#FF9F43", emoji: "ð" },
+            { label: "Total Items", value: items.length, color: "#6C5CE7", emoji: "📦" },
+            { label: "Low Stock", value: lowStock.length, color: PINK, emoji: "⚠️" },
+            { label: "Expiring", value: expiring.length + expired.length, color: "#FF9F43", emoji: "📅" },
           ].map((s) => (
             <div key={s.label} onClick={() => onNavigate("backstock")} style={{ background: "white", borderRadius: 16, padding: "14px 10px", textAlign: "center", boxShadow: "0 2px 10px rgba(0,0,0,0.06)", cursor: "pointer" }}>
               <div style={{ fontSize: 22, marginBottom: 4 }}>{s.emoji}</div>
@@ -1067,7 +1192,7 @@ function HomeScreen({ user, items, onNavigate }) {
 
         {items.length === 0 && (
           <div style={{ background: "white", borderRadius: 20, padding: "24px", textAlign: "center", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
-            <div style={{ fontSize: 48, marginBottom: 12 }}>ð </div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🏠</div>
             <h3 style={{ margin: "0 0 8px", fontSize: 17, fontWeight: 700 }}>Start Your Backstock</h3>
             <p style={{ margin: "0 0 20px", fontSize: 14, color: "#888", lineHeight: 1.5 }}>Scan or manually add household items to keep track of what you have.</p>
             <button onClick={() => onNavigate("backstock")} style={{ ...btnPrimary, width: "auto", padding: "13px 32px" }}>Add First Item</button>
@@ -1075,30 +1200,30 @@ function HomeScreen({ user, items, onNavigate }) {
         )}
 
         <div onClick={() => onNavigate("gifts")} style={{ marginTop: 16, background: "linear-gradient(135deg, #6C5CE7, #a29bfe)", borderRadius: 20, padding: "18px 20px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer", boxShadow: "0 4px 20px rgba(108,92,231,0.3)" }}>
-          <div style={{ fontSize: 32 }}>ð</div>
+          <div style={{ fontSize: 32 }}>🎁</div>
           <div>
             <p style={{ margin: 0, color: "white", fontWeight: 700, fontSize: 15 }}>Gift Giver</p>
-            <p style={{ margin: "3px 0 0", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>Coming soon â never miss a birthday</p>
+            <p style={{ margin: "3px 0 0", color: "rgba(255,255,255,0.75)", fontSize: 13 }}>Coming soon — never miss a birthday</p>
           </div>
-          <div style={{ marginLeft: "auto", color: "rgba(255,255,255,0.6)", fontSize: 18 }}>âº</div>
+          <div style={{ marginLeft: "auto", color: "rgba(255,255,255,0.6)", fontSize: 18 }}>›</div>
         </div>
       </div>
     </div>
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  GIFT GIVER PLACEHOLDER
-// âââââââââââââââââââââââââââââââââââââââââââââââ
+// ═══════════════════════════════════════════════
 
 function GiftGiverScreen() {
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 24px", textAlign: "center" }}>
-      <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #6C5CE7, #a29bfe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, marginBottom: 24, boxShadow: "0 12px 40px rgba(108,92,231,0.3)" }}>ð</div>
+      <div style={{ width: 100, height: 100, borderRadius: "50%", background: "linear-gradient(135deg, #6C5CE7, #a29bfe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 44, marginBottom: 24, boxShadow: "0 12px 40px rgba(108,92,231,0.3)" }}>🎁</div>
       <h2 style={{ margin: "0 0 12px", fontSize: 26, fontWeight: 800, color: "#1A1A2E", fontFamily: "'Syne', sans-serif" }}>Gift Giver</h2>
-      <p style={{ margin: "0 0 32px", fontSize: 15, color: "#888", lineHeight: 1.6, maxWidth: 300 }}>Never miss a birthday or special occasion. Smart gift suggestions, reminders, and more â coming next.</p>
+      <p style={{ margin: "0 0 32px", fontSize: 15, color: "#888", lineHeight: 1.6, maxWidth: 300 }}>Never miss a birthday or special occasion. Smart gift suggestions, reminders, and more — coming next.</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", maxWidth: 300 }}>
-        {[{ emoji: "ð", text: "Birthday & event reminders" }, { emoji: "ð", text: "Batch digest notifications" }, { emoji: "ð¤", text: "AI-powered gift suggestions" }, { emoji: "ð¸", text: "Share wish lists & screenshots" }].map((f) => (
+        {[{ emoji: "📅", text: "Birthday & event reminders" }, { emoji: "🔔", text: "Batch digest notifications" }, { emoji: "🤖", text: "AI-powered gift suggestions" }, { emoji: "📸", text: "Share wish lists & screenshots" }].map((f) => (
           <div key={f.text} style={{ background: "white", borderRadius: 14, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.05)" }}>
             <span style={{ fontSize: 22 }}>{f.emoji}</span>
             <span style={{ fontSize: 14, color: "#555", fontWeight: 500 }}>{f.text}</span>
@@ -1109,9 +1234,9 @@ function GiftGiverScreen() {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  PROFILE SCREEN
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function ProfileScreen({ user, onLogout }) {
   const displayName = user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
@@ -1128,26 +1253,26 @@ function ProfileScreen({ user, onLogout }) {
       <div style={{ padding: "20px 16px" }}>
         <div style={{ background: "white", borderRadius: 16, overflow: "hidden", boxShadow: "0 2px 10px rgba(0,0,0,0.05)" }}>
           <button onClick={onLogout} style={{ width: "100%", padding: "16px 20px", background: "none", border: "none", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", fontFamily: "inherit", borderTop: "1px solid #F5F5F5" }}>
-            <span style={{ fontSize: 20 }}>ðª</span>
+            <span style={{ fontSize: 20 }}>🚪</span>
             <span style={{ fontSize: 15, color: "#FF006E", fontWeight: 600 }}>Sign Out</span>
           </button>
         </div>
-        <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#ccc" }}>Niles Â· Your personal home butler ð©</p>
+        <p style={{ textAlign: "center", marginTop: 32, fontSize: 12, color: "#ccc" }}>Niles · Your personal home butler 🎩</p>
       </div>
     </div>
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  BOTTOM NAV
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function BottomNav({ screen, setScreen }) {
   const tabs = [
-    { id: "home", label: "Home", icon: "ð " },
-    { id: "backstock", label: "Backstock", icon: "ð¦" },
-    { id: "gifts", label: "Gifts", icon: "ð" },
-    { id: "profile", label: "Profile", icon: "ð¤" },
+    { id: "home", label: "Home", icon: "🏠" },
+    { id: "backstock", label: "Backstock", icon: "📦" },
+    { id: "gifts", label: "Gifts", icon: "🎁" },
+    { id: "profile", label: "Profile", icon: "👤" },
   ];
   return (
     <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 430, background: "white", borderTop: "1px solid #F0F0F0", display: "flex", paddingBottom: "env(safe-area-inset-bottom, 8px)", boxShadow: "0 -4px 20px rgba(0,0,0,0.06)", zIndex: 100 }}>
@@ -1161,9 +1286,9 @@ function BottomNav({ screen, setScreen }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════
 //  MAIN APP
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 function MainApp({ user, onLogout }) {
   const [screen, setScreen] = useState("home");
@@ -1191,9 +1316,9 @@ function MainApp({ user, onLogout }) {
   );
 }
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  SHARED MODAL STYLES
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 
 const overlayStyle = {
   position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)",
@@ -1202,16 +1327,19 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  background: "white", borderRadius: "28px 28px 0 0",
+  background: "white", borderRadius: 28,
+  padding: "20px", maxWidth: 420, width: "100%", maxHeight: "90vh", overflow: "auto",
+  display: "flex", flexDirection: "column",
+};borderRadius: "28px 28px 0 0",
   padding: "24px 20px 32px", width: "100%", maxWidth: 430,
   maxHeight: "90vh", overflowY: "auto",
   boxShadow: "0 -8px 40px rgba(0,0,0,0.15)",
   fontFamily: "'DM Sans', -apple-system, sans-serif",
 };
 
-// ââââââââââââââââââââââââââââââââââââââââââââââ
+// ══════════════════════════════════════════════
 //  ROOT
-// ââââââââââââââââââââââââââââââââââââââââââââââââ
+// ════════════════════════════════════════════════
 
 export default function NilesApp() {
   const [user, setUser] = useState(null);
@@ -1248,9 +1376,9 @@ export default function NilesApp() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: `linear-gradient(155deg, ${PINK} 0%, #FF87C3 45%, #FFF0F7 100%)` }}>
         <div style={{ textAlign: "center", color: "white" }}>
-          <div style={{ fontSize: 52, marginBottom: 16 }}>ð©</div>
-          <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.9 }}>Loading Nilesâ¦</p>
-     0  </div>
+          <div style={{ fontSize: 52, marginBottom: 16 }}>🎩</div>
+          <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.9 }}>Loading Niles…</p>
+        </div>
       </div>
     );
   }
