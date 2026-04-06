@@ -287,56 +287,7 @@ function AuthScreen() {
                 color: mode === m ? PINK : "#999",
                 fontWeight: mode === m ? 700 : 500,
                 fontSize: 14, cursor: "pointer",
-                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
-              }}
-            >
-              {m === "login" ? "Log in" : "Sign up"}
-            </button>
-          ))}
-        </div>
-
-        {/* Messages */}
-        {err && <div style={{ color: "#E74C3C", fontSize: 13, marginBottom: 16, padding: "12px", background: "#FFE5E5", borderRadius: 8 }}>{err}</div>}
-        {successMsg && <div style={{ color: "#27AE60", fontSize: 13, marginBottom: 16, padding: "12px", background: "#E8F8F5", borderRadius: 8 }}>{successMsg}</div>}
-
-        {/* Form */}
-        {mode === "signup" && (
-          <input
-            type="text"
-            placeholder="Your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={iStyle}
-          />
-        )}
-        <input
-          type="email"
-          placeholder="Email address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          style={iStyle}
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          style={iStyle}
-        />
-
-        {/* Primary Button */}
-        <button onClick={submit} disabled={loading} style={{ ...btnPrimary, opacity: loading ? 0.7 : 1, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Loading..." : (mode === "login" ? "Log in" : "Create account")}
-        </button>
-
-        {/* Google Button */}
-        <button onClick={signInWithGoogle} style={{ ...btnSecondary, marginTop: 12 }}>
-          Continue with Google
-        </button>
-      </div>
-    </div>
-  );
-}adow: mode === m ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
+                boxShadow: mode === m ? "0 2px 8px rgba(0,0,0,0.1)" : "none",
                 transition: "all 0.2s",
                 fontFamily: "inherit",
               }}
@@ -766,21 +717,6 @@ function ItemCard({ item, allCategories, onClick }) {
       onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.12)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.transform = ""; e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
     >
-      <div style={{ display: "flex", gap: 12, padding: "12px" }}>
-        <div style={{ width: 56, height: 56, borderRadius: 12, background: cat.color + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>{cat.emoji}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h4 style={{ margin: "0 0 3px", fontSize: 16, fontWeight: 700, color: "#222", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{item.name}</h4>
-          <p style={{ margin: "0 0 6px", fontSize: 13, color: "#888" }}>{item.quantity} {item.unit}</p>
-          {item.brand && <p style={{ margin: 0, fontSize: 12, color: "#aaa" }}>{item.brand}</p>}
-          {isExpired && <p style={{ margin: 0, fontSize: 12, color: "#FF006E", fontWeight: 600 }}>EXPIRED</p>}
-          {isExpiringSoon && !isExpired && <p style={{ margin: 0, fontSize: 12, color: "#FFA500", fontWeight: 600 }}>Exp. soon</p>}
-          {isLow && !isExpired && !isExpiringSoon && <p style={{ margin: 0, fontSize: 12, color: PINK, fontWeight: 600 }}>Low stock</p>}
-        </div>
-      </div>
-    </div>
-  );
-}currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.07)"; }}
-    >
       <div style={{ height: 130, background: `linear-gradient(150deg, ${cat.color}44, ${cat.color}1A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 52, position: "relative", overflow: "hidden" }}>
         {item.photo
           ? <img src={item.photo} style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", position: "absolute", inset: 0, padding: "10px", boxSizing: "border-box" }} alt="" />
@@ -956,10 +892,7 @@ function BackstockScreen({ user }) {
   const addStore = async () => {
     const name = newStore.trim();
     if (!name || stores.includes(name)) { setNewStore(""); setShowStoreInput(false); return; }
-    const { error } = await supabase.from("user_stores").insert({ user_id: user.id, name }).select().single();
-    if (!error) { setStores((prev) => [...prev, name]); setNewStore(""); setShowStoreInput(false); }
-  };
-base.from("user_stores").insert({ user_id: user.id, name, emoji: "🏪", color: "#888888" });
+    const { error } = await supabase.from("user_stores").insert({ user_id: user.id, name, emoji: "🏪", color: "#888888" });
     if (!error) setStores((prev) => [...prev, name]);
     setNewStore("");
     setShowStoreInput(false);
@@ -988,7 +921,7 @@ base.from("user_stores").insert({ user_id: user.id, name, emoji: "🏪", color: 
               {expiredCount > 0 && <span style={{ color: "#FF006E" }}> · {expiredCount} expired</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
+          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
         </div>
 
         <div style={{ display: "flex", gap: 0, marginBottom: 0 }}>
@@ -1092,70 +1025,12 @@ function HomeScreen({ user, items, onNavigate }) {
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
-      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "32px 20px 28px", color: "white" }}>
-        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day</p>
+      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, padding: "32px 20px 28px", color: "white" }}>
+        <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day+</p>
         <h2 style={{ margin: "0 0 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: "'Syne', sans-serif" }}>
           {displayName} 👋
         </h2>
-        <p style={{ margin: 0, fontSize: 13, opacity: 0.88 }}>
-          {items.length === 0 ? "Start by adding items to your backstock" : `You have ${items.length} item${items.length === 1 ? "" : "s"}`}
-        </p>
-      </div>
-
-      <div style={{ padding: "18px 16px" }}>
-        {/* Quick stats */}
-        {(lowStock.length > 0 || expiring.length > 0 || expired.length > 0) && (
-          <div style={{ marginBottom: 20 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.4px" }}>Alerts</p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {expired.length > 0 && (
-                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: "#FF006E15", border: "2px solid #FF006E", borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: 10, color: "#FF006E", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>EXPIRED</p>
-                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#FF006E" }}>{expired.length}</p>
-                </button>
-              )}
-              {lowStock.length > 0 && (
-                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: PINK + "18", border: `2px solid ${PINK}`, borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: 10, color: PINK, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>Low Stock</p>
-                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: PINK }}>{lowStock.length}</p>
-                </button>
-              )}
-              {expiring.length > 0 && (
-                <button onClick={() => onNavigate("backstock")} style={{ flex: 1, minWidth: 120, padding: "12px", background: "#FFBE0B15", border: "2px solid #FFBE0B", borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                  <p style={{ margin: "0 0 4px", fontSize: 10, color: "#FFBE0B", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.3px" }}>Expiring Soon</p>
-                  <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: "#FFBE0B" }}>{expiring.length}</p>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Category breakdown */}
-        {catCounts.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <p style={{ margin: "0 0 10px", fontSize: 12, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.4px" }}>Categories</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 8 }}>
-              {catCounts.map((c) => (
-                <button key={c.id} onClick={() => onNavigate("backstock")} style={{ padding: "14px 12px", background: "white", border: `2px solid ${c.color}22`, borderRadius: 14, cursor: "pointer", fontFamily: "inherit" }}>
-                  <p style={{ margin: 0, fontSize: 22, marginBottom: 4 }}>{c.emoji}</p>
-                  <p style={{ margin: "0 0 6px", fontSize: 11, fontWeight: 700, color: c.color, textTransform: "uppercase", letterSpacing: "0.3px" }}>{c.label}</p>
-                  <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: "#1A1A2E" }}>{c.count}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Navigation */}
-        {items.length > 0 && (
-          <div>
-            <button onClick={() => onNavigate("backstock")} style={{ ...btnPrimary, width: "100%" }}>View My Shelf</button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}le={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Niles is at your service.</p>
+        <p style={{ margin: 0, fontSize: 13, opacity: 0.8 }}>Niles is at your service.</p>
       </div>
 
       <div style={{ padding: "20px 16px" }}>
@@ -1174,7 +1049,7 @@ function HomeScreen({ user, items, onNavigate }) {
         </div>
 
         {catCounts.length > 0 && (
-          <div style={{ background: "white", borderRadius: 20, padding: "18px 16px", marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
+          <div style={{ background: "white", borderRadius: 20, padding: "18px 20px", marginBottom: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)" }}>
             <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 700, color: "#1A1A2E" }}>Top Categories</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {catCounts.map((c) => (
@@ -1243,7 +1118,7 @@ function ProfileScreen({ user, onLogout }) {
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
-      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "36px 20px 28px", textAlign: "center" }}>
+      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, padding: "36px 20px 28px", textAlign: "center" }}>
         <div style={{ width: 72, height: 72, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, margin: "0 auto 12px", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
           {displayName.charAt(0).toUpperCase()}
         </div>
@@ -1327,10 +1202,7 @@ const overlayStyle = {
 };
 
 const modalStyle = {
-  background: "white", borderRadius: 28,
-  padding: "20px", maxWidth: 420, width: "100%", maxHeight: "90vh", overflow: "auto",
-  display: "flex", flexDirection: "column",
-};borderRadius: "28px 28px 0 0",
+  background: "white", borderRadius: "28px 28px 0 0",
   padding: "24px 20px 32px", width: "100%", maxWidth: 430,
   maxHeight: "90vh", overflowY: "auto",
   boxShadow: "0 -8px 40px rgba(0,0,0,0.15)",
@@ -1378,7 +1250,7 @@ export default function NilesApp() {
         <div style={{ textAlign: "center", color: "white" }}>
           <div style={{ fontSize: 52, marginBottom: 16 }}>🎩</div>
           <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.9 }}>Loading Niles…</p>
-        </div>
+     0  </div>
       </div>
     );
   }
