@@ -921,7 +921,7 @@ function BackstockScreen({ user }) {
               {expiredCount > 0 && <span style={{ color: "#FF006E" }}> · {expiredCount} expired</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
+          <button onClick={() => setShowAdd(true)} style={{ width: 44, height: 44, background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, border: "none", borderRadius: 14, color: "white", fontSize: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 16px rgba(255,45,146,0.35)" }}>+</button>
         </div>
 
         <div style={{ display: "flex", gap: 0, marginBottom: 0 }}>
@@ -1025,7 +1025,7 @@ function HomeScreen({ user, items, onNavigate }) {
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
-      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, padding: "32px 20px 28px", color: "white" }}>
+      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "32px 20px 28px", color: "white" }}>
         <p style={{ margin: "0 0 4px", fontSize: 13, opacity: 0.85 }}>Good day+</p>
         <h2 style={{ margin: "0 0 2px", fontSize: 26, fontWeight: 800, letterSpacing: "-0.5px", fontFamily: "'Syne', sans-serif" }}>
           {displayName} 👋
@@ -1118,7 +1118,7 @@ function ProfileScreen({ user, onLogout }) {
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: "#F7F7F9", minHeight: "100%", paddingBottom: 80 }}>
-      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FECHSIA})`, padding: "36px 20px 28px", textAlign: "center" }}>
+      <div style={{ background: `linear-gradient(135deg, ${PINK}, ${FUCHSIA})`, padding: "36px 20px 28px", textAlign: "center" }}>
         <div style={{ width: 72, height: 72, borderRadius: "50%", background: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, margin: "0 auto 12px", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
           {displayName.charAt(0).toUpperCase()}
         </div>
